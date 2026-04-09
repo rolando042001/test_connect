@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Profile | EuFile Workspace</title>
+    <style>
+        :root {
+            --primary: #03acfa;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: rgba(255,255,255,0.05);
+            --bg-main: #f8fafc;
+            --text-main: #1e293b;
+            --border: #e2e8f0;
+            --text-dim: #64748b;
+            --white: #ffffff;
+            --danger: #ef4444;
+            --success: #10b981;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.02);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        body { margin: 0; font-family: "Segoe UI", sans-serif; display: flex; height: 100vh; background: var(--bg-main); overflow: hidden; }
+
+        /* USER SIDEBAR */
+        aside { width: 260px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; flex-shrink: 0; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .brand { padding: 25px 20px; font-weight: 800; font-size: 1.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); color: #60a5fa; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .nav-scroll { flex: 1; overflow-y: auto; padding: 15px 10px; }
+        .menu-category { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; margin: 15px 10px 5px; font-weight: 800; letter-spacing: 0.5px; }
+        .nav-item { padding: 12px 15px; border-radius: 8px; color: white; display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; transition: 0.2s; font-weight: 600; }
+        .nav-item:hover, .nav-item.active { background: var(--sidebar-hover); color: white; }
+        .nav-item.active { background: var(--primary) !important; box-shadow: 0 4px 12px rgba(3, 172, 250, 0.2); }
+        .nav-item span svg { stroke: white; }
+
+        .logout-section { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn-logout { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--text-dim); color: var(--text-light); border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.2s; text-align: center; }
+        .btn-logout:hover { background: rgba(255,255,255,0.05); color: white; border-color: white; }
+
+        /* MAIN AREA */
+        main { flex: 1; padding: 40px; overflow-y: auto; max-width: 1400px; margin: 0 auto; position: relative; }
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .page-title h1 { margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-main); }
+        .page-title p { margin: 5px 0 0; color: var(--text-dim); font-size: 0.9rem; font-weight: 600; }
+
+        /* PROFILE LAYOUT */
+        .profile-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        .card { background: white; padding: 30px; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+        
+        .avatar-section { text-align: center; }
+        .avatar-wrapper { width: 120px; height: 120px; border-radius: 50%; border: 4px solid #f1f5f9; margin: 0 auto 15px; overflow: hidden; position: relative; background: #e2e8f0; }
+        .avatar-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .change-photo-btn { margin-top: 10px; background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); padding: 8px 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .change-photo-btn:hover { background: white; border-color: var(--primary); color: var(--primary); }
+
+        .info-badge { display: inline-block; background: #f0f9ff; color: #0284c7; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; margin-top: 10px; border: 1px solid #bae6fd; text-transform: uppercase; }
+
+        /* FORM STYLING */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 800; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; }
+        .form-control { width: 100%; padding: 12px 15px; border: 1px solid var(--border); border-radius: 10px; outline: none; transition: 0.2s; box-sizing: border-box; background: #f8fafc; font-family: inherit; font-size: 0.9rem; color: var(--text-main); font-weight: 600; }
+        .form-control:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(3, 172, 250, 0.1); }
+        .form-control:disabled { background: #e2e8f0; color: var(--text-dim); cursor: not-allowed; border-color: transparent; }
+
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(3, 172, 250, 0.2); font-size: 0.9rem; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(3, 172, 250, 0.3); }
+
+        /* SECURITY SECTION */
+        .security-row { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #f8fafc; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; }
+        .sec-icon { width: 40px; height: 40px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+        .sec-status { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; }
+        .sec-active { background: #dcfce7; color: #16a34a; }
+        .sec-inactive { background: #f1f5f9; color: var(--text-dim); }
+
+        .section-title { font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin: 0 0 20px 0; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
+    </style>
+</head>
+<body>
+
+<aside>
+    <div class="brand" onclick="window.location.href='User_Dashboard.html'">☁️ EuFile Workspace</div>
+    <div class="nav-scroll">
+        <div class="menu-category">Main</div>
+        <a href="User_Dashboard.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span> My Dashboard</a>
+        
+        <div class="menu-category">Storage</div>
+        <a href="User_PrivateVault.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span> Private Cabinet</a>
+        <a href="User_DeptVault.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span> Department Vault</a>
+        
+        <div class="menu-category">Requests</div>
+        <a href="User_Requests.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span> My Requests</a>
+
+        <div class="menu-category">Records</div>
+        <a href="User_Archive.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect></svg></span> My Archive</a>
+        <a href="User_Trash.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg></span> My Trash</a>
+        
+        <div class="menu-category">Account</div>
+        <a href="User_Profile.html" class="nav-item active"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path></svg></span> My Profile</a>
+    </div>
+    <div class="logout-section"><button class="btn-logout" onclick="window.location.href='../Backend/logout.php'">Sign Out</button></div>
+</aside>
+
+<main>
+    <div class="header-flex">
+        <div class="page-title">
+            <h1>Account Settings</h1>
+            <p>Manage your personal information and security preferences.</p>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <div class="card avatar-section">
+            <div class="avatar-wrapper">
+                <img src="https://ui-avatars.com/api/?name=User+Name&background=03acfa&color=fff" alt="Profile Picture" id="profileImgPreview">
+            </div>
+            <h2 style="margin: 0; font-size: 1.2rem; color: var(--text-main);">User Name</h2>
+            <div class="info-badge">Accounting Dept</div>
+            <br>
+            <button class="change-photo-btn" onclick="document.getElementById('photoInput').click()">Upload New Photo</button>
+            <input type="file" id="photoInput" style="display: none;" accept="image/*">
+
+            <div style="margin-top: 40px; text-align: left;">
+                <h3 class="section-title" style="font-size: 0.9rem;">Security Status</h3>
+                
+                <div class="security-row">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="sec-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+                        <div>
+                            <div style="font-size:0.85rem; font-weight:700; color:var(--text-main);">Account Password</div>
+                            <div style="font-size:0.7rem; color:var(--text-dim);">Last changed 30 days ago</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="security-row">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="sec-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12z"></path><path d="M12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"></path></svg></div>
+                        <div>
+                            <div style="font-size:0.85rem; font-weight:700; color:var(--text-main);">Biometrics</div>
+                            <div class="sec-status sec-active" style="margin-top:4px;">Enrolled</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="security-row">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div class="sec-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg></div>
+                        <div>
+                            <div style="font-size:0.85rem; font-weight:700; color:var(--text-main);">RFID Card</div>
+                            <div class="sec-status sec-inactive" style="margin-top:4px;">Not Linked</div>
+                        </div>
+                    </div>
+                </div>
+                <p style="font-size: 0.7rem; color: var(--text-dim); text-align: center; margin-top: 15px;">* Contact your System Administrator to update your Biometrics or RFID card.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="section-title">Personal Information</h3>
+            <form id="profileForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" class="form-control" value="User" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" class="form-control" value="Name" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" class="form-control" value="user@eugrace.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Department (Read-Only)</label>
+                        <input type="text" class="form-control" value="Accounting Dept" disabled>
+                    </div>
+                </div>
+                <div style="text-align: right; margin-bottom: 40px;">
+                    <button type="button" class="btn-primary" onclick="alert('Profile Updated!')">Save Changes</button>
+                </div>
+            </form>
+
+            <h3 class="section-title">Change Password</h3>
+            <form id="passwordForm">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" class="form-control" placeholder="Enter current password" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" class="form-control" placeholder="Minimum 8 characters" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" class="form-control" placeholder="Re-type new password" required>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <button type="button" class="btn-primary" style="background: var(--text-main);" onclick="alert('Password Successfully Changed!')">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

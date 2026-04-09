@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings | Eufile</title>
+
+<style>
+:root{
+  --primary:#03acfa; --sidebar-bg:#0f172a; --sidebar-hover:#1e293b; --bg-main:#f1f5f9; --text-main:#1e293b; 
+  --border:#e2e8f0; --text-dim:#64748b; --text-light:#cbd5e1; --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+}
+
+body{ margin:0; font-family:"Segoe UI",sans-serif; display:flex; height:100vh; background:var(--bg-main); overflow: hidden; }
+
+/* ===== SIDEBAR ===== */
+aside{ width:260px; background:var(--sidebar-bg); color:white; display:flex; flex-direction:column; flex-shrink: 0; }
+.brand{ padding:20px; font-weight:700; font-size:1.4rem; border-bottom:1px solid #334155; color:#60a5fa; cursor: pointer; }
+.nav-scroll{ flex:1; overflow-y:auto; padding:15px 10px; }
+.menu-category{ font-size:0.75rem; text-transform:uppercase; color:var(--text-dim); margin:15px 10px 5px; font-weight:bold; }
+.nav-item{ padding:12px 15px; border-radius:6px; color:var(--text-light); display:flex; align-items:center; gap:12px; cursor:pointer; transition: 0.2s; text-decoration: none; }
+.nav-item:hover, .nav-item.active{ background:var(--sidebar-hover); color:white; }
+.nav-item.active{ background:var(--primary); }
+.nav-item span svg { stroke: white; }
+.dropdown-container { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.15); border-radius: 8px; margin: 0 10px; }
+.dropdown-container.show { max-height: 500px; margin: 5px 10px; }
+.sub-item { padding: 10px 20px 10px 45px; font-size: 0.85rem; color: var(--text-light); cursor: pointer; text-decoration: none; display: block; border-left: 3px solid transparent; }
+.sub-item:hover { color: white; background: var(--sidebar-hover); border-left: 3px solid var(--primary); }
+.logout-section{ padding:20px; border-top:1px solid #334155; }
+.btn-logout { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; text-align: center; }
+.btn-logout:hover { background: var(--danger); color: white; }
+
+/* ===== MAIN CONTENT ===== */
+main{ flex:1; padding:40px; overflow-y:auto; }
+.page-title { margin-bottom: 30px; }
+.page-title h1 { margin: 0; font-size: 1.8rem; font-weight: 800; }
+.page-title p { margin: 5px 0 0; color: var(--text-dim); }
+
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+.card { background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+.card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+.card-header h2 { margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+.card-header span svg { stroke: var(--primary); }
+
+/* Switch Controls */
+.setting-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed #f1f5f9;}
+.setting-info h4 { margin: 0; font-size: 0.95rem; }
+.setting-info p { margin: 3px 0 0; font-size: 0.8rem; color: var(--text-dim); }
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1; transition: .4s; border-radius: 24px; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: var(--primary); }
+input:checked + .slider:before { transform: translateX(20px); }
+
+/* Status Indicators */
+.esp-status-box { background: #f8fafc; padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; margin-top: 15px; border: 1px solid var(--border); }
+.status-indicator { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; display: inline-block; margin-right: 8px;}
+.status-indicator.connected { background: var(--success); box-shadow: 0 0 8px var(--success); }
+.status-indicator.error { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+.input-group { margin-top: 15px; }
+.input-group label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 5px; }
+.input-field { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; outline: none; transition: 0.2s; box-sizing: border-box; font-family: monospace; background: #f8fafc;}
+.input-field:focus { border-color: var(--primary); background: white;}
+
+/* Buttons */
+.btn-save { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 15px; transition: 0.2s; }
+.btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-secondary { background: white; color: var(--text-main); border: 1px solid var(--border); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+.btn-secondary:hover { background: #f8fafc; border-color: var(--text-dim); }
+
+.btn-group-row { display: flex; gap: 10px; margin-top: 15px; }
+.btn-warning { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; flex: 1; text-align: center;}
+.btn-warning:hover { background: #fef3c7; }
+.btn-action { background: #eff6ff; color: #0284c7; border: 1px solid #bae6fd; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; flex: 1; text-align: center;}
+.btn-action:hover { background: #e0f2fe; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: none; align-items: center; justify-content: center; z-index: 2000; }
+.modal { background: white; padding: 30px; border-radius: 16px; width: 380px; text-align: center; }
+
+/* Table */
+.rbac-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; }
+.rbac-table th { background: #f8fafc; padding: 12px 10px; text-align: left; color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+.rbac-table td { padding: 15px 10px; border-bottom: 1px solid var(--border); }
+</style>
+</head>
+
+<body>
+
+<aside>
+    <div class="brand" onclick="window.location.href='../Landing/Dashboard.html'">☁️ Eufile Admin</div>
+    <div class="nav-scroll">
+      <div class="menu-category">Main</div>
+      <a href="../Landing/Dashboard.html" class="nav-item"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span> Dashboard</a>
+      
+      <div class="menu-category">Workspace</div>
+      <div class="nav-item" onclick="toggleDepartments()">
+        <div style="display: flex; gap: 12px; align-items: center"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span> Departments</div>
+        <span id="dropArrow" style="margin-left:auto; transition: 0.3s">▼</span>
+      </div>
+      <div class="dropdown-container" id="deptDropdown"></div>
+
+      <div class="menu-category">Management</div>
+      <a href="../Request/Request.html" class="nav-item"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path></svg></span> Access Requests</a>
+      <a href="../Document/E-vault.html" class="nav-item"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg></span> E-Cabinet Storage</a>
+
+      <div class="menu-category">System</div>
+      <a href="../Archive/Archive.html" class="nav-item"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect></svg></span> Archive</a>
+      <a href="../Trash/Trash.html" class="nav-item"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg></span> Trash</a>
+      <a href="../Settings/Settings.html" class="nav-item active"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></span> Settings</a>
+    </div>
+    <div class="logout-section">
+      <button class="btn-logout" onclick="handleLogout()">Logout</button>
+    </div>
+</aside>
+
+<main>
+  <div class="page-title">
+    <h1>System Settings</h1>
+    <p>Configure security, hardware integration, and system preferences.</p>
+  </div>
+
+  <div class="settings-grid">
+    
+    <div class="card">
+      <div class="card-header">
+        <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg></span>
+        <h2>ESP32 Network Configuration</h2>
+      </div>
+
+      <div class="input-group">
+        <label>WiFi SSID</label>
+        <input type="text" class="input-field" id="espWifiSsid" placeholder="WIFI">
+      </div>
+
+      <div class="input-group">
+        <label>WiFi Password</label>
+        <input type="text" class="input-field" id="espWifiPass" placeholder="Password">
+      </div>
+
+      <div class="input-group">
+        <label>Server Endpoint (URL)</label>
+        <input type="text" class="input-field" id="espServerUrl" placeholder="http://192.168.18.245/test_connect/">
+      </div>
+
+      <div style="margin-top: 20px; text-align: right;">
+        <button class="btn-save" onclick="saveNetworkSettings()">Save Network Config</button>
+      </div>
+
+      <div style="border-top: 1px solid var(--border); margin-top: 25px; padding-top: 20px;">
+        <div class="setting-info" style="margin-bottom: 10px;"><h4>Hardware Controls</h4></div>
+        <div class="btn-group-row">
+            <button class="btn-warning" onclick="triggerEnrollment()">Registration Mode</button>
+            <button class="btn-action" onclick="triggerRelay()">Test Relay 1</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>
+        <h2>Active Authentication Methods</h2>
+      </div>
+
+      <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 20px;">
+        Toggle active security steps. Your ESP32 device will sync these preferences automatically.
+      </p>
+      
+      <div class="setting-row">
+        <div class="setting-info"><h4>RFID Authentication</h4><p>Enable PN532 card scanning (Step 1)</p></div>
+        <label class="switch"><input type="checkbox" id="mfaRfid" checked><span class="slider"></span></label>
+      </div>
+
+      <div class="setting-row">
+        <div class="setting-info"><h4>Biometric Fingerprint</h4><p>Enable fingerprint verification (Step 2)</p></div>
+        <label class="switch"><input type="checkbox" id="mfaFingerprint" checked><span class="slider"></span></label>
+      </div>
+
+      <div class="setting-row" style="border-bottom: none;">
+        <div class="setting-info"><h4>Keypad Passcode / PIN</h4><p>Enable 4x4 keypad code entry (Step 3)</p></div>
+        <label class="switch"><input type="checkbox" id="mfaPasscode" checked><span class="slider"></span></label>
+      </div>
+
+      <div style="margin-top:20px; text-align:right;">
+        <button class="btn-save" onclick="saveSecuritySettings()">Save MFA Preferences</button>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column: span 2;">
+      <div class="card-header">
+        <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 1l3 6 6 .75-4.5 4.25 1 6L12 15.75 6.5 18l1-6L3 7.75 9 7z"></path></svg></span>
+        <h2>Hardware Authentication Audit Trail</h2>
+        <button class="btn-secondary" style="margin-left:auto; padding:6px 14px; font-size:.8rem;" onclick="loadHardwareLog()">Refresh</button>
+      </div>
+
+      <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 10px;">
+        Latest 50 RFID + fingerprint + passcode attempts captured by the physical cabinet (granted &amp; denied).
+      </p>
+
+      <table class="rbac-table" id="hwLogTable">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>User</th>
+            <th>RFID</th>
+            <th>Factors (R / F / P)</th>
+            <th>Result</th>
+            <th>Device</th>
+          </tr>
+        </thead>
+        <tbody id="hwLogBody">
+          <tr><td colspan="6" style="text-align:center; color:var(--text-dim);">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" style="grid-column: span 2;">
+      <div class="card-header">
+        <span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span>
+        <h2>User Security Management (RBAC + MFA + Hardware Enrollment)</h2>
+      </div>
+
+      <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 15px;">
+        Change role, toggle MFA, or arm the ESP32 to enroll a user's RFID + fingerprint + passcode.
+      </p>
+
+      <table class="rbac-table" id="userTable">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>MFA</th>
+            <th>Hardware</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          <tr><td colspan="6" style="text-align:center; color:var(--text-dim);">Loading users...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</main>
+
+<div id="modalOverlay" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modalTitle" style="color:var(--primary); margin-top:0;">System Notification</h3>
+    <p id="modalBody" style="color:var(--text-dim); margin-bottom:20px;"></p>
+    <button class="btn-save" style="width:100%; margin:0;" onclick="closeModal()">Understood</button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    initSidebar();
+    loadUsers();
+    loadHardwareLog();
+});
+
+const SETTINGS_API = 'manage_settings.php';
+
+async function initSidebar() {
+    const dropdown = document.getElementById("deptDropdown");
+    try {
+        const res = await fetch("../Backend/get_Departments.php");
+        const departments = await res.json();
+        dropdown.innerHTML = departments.map(dept => `
+            <a href="../Departments/Departments.html?dept=${encodeURIComponent(dept.name)}" class="sub-item">${dept.name}</a>
+        `).join('');
+    } catch (err) { console.error(err); }
+}
+
+function toggleDepartments() {
+    const isShowing = document.getElementById("deptDropdown").classList.toggle("show");
+    document.getElementById("dropArrow").style.transform = isShowing ? "rotate(0deg)" : "rotate(-90deg)";
+}
+
+// -----------------------------------------------------
+// DYNAMIC SETTINGS LOGIC
+// -----------------------------------------------------
+
+// -----------------------------------------------------
+// USER LIST + RBAC + MFA + ENROLLMENT
+// -----------------------------------------------------
+async function loadUsers() {
+    const body = document.getElementById('userTableBody');
+    try {
+        const res  = await fetch(`${SETTINGS_API}?action=list_users`);
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.message || 'Failed');
+
+        if (!json.data.length) {
+            body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-dim);">No users found.</td></tr>';
+            return;
+        }
+
+        body.innerHTML = json.data.map(u => {
+            const fullName = `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || '(unnamed)';
+            const hwBadges = [
+                u.has_rfid == 1        ? '<span title="RFID enrolled" style="color:var(--success)">●RFID</span>' : '<span style="color:#cbd5e1">○RFID</span>',
+                u.has_fingerprint == 1 ? '<span title="Fingerprint enrolled" style="color:var(--success)">●FP</span>' : '<span style="color:#cbd5e1">○FP</span>',
+                u.has_passcode == 1    ? '<span title="Passcode set" style="color:var(--success)">●PIN</span>' : '<span style="color:#cbd5e1">○PIN</span>',
+            ].join(' ');
+
+            return `
+                <tr data-user-id="${u.id}">
+                  <td><strong>${escapeHtml(fullName)}</strong></td>
+                  <td style="font-size:0.8rem; color:var(--text-dim);">${escapeHtml(u.email ?? '')}</td>
+                  <td>
+                    <select class="input-field" style="padding:6px; font-family:inherit;" onchange="updateRole(${u.id}, this.value)">
+                      <option value="Staff" ${u.role === 'Staff' ? 'selected' : ''}>Staff</option>
+                      <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
+                    </select>
+                  </td>
+                  <td>
+                    <label class="switch">
+                      <input type="checkbox" ${u.mfa_enabled == 1 ? 'checked' : ''} onchange="updateMfa(${u.id}, this.checked)">
+                      <span class="slider"></span>
+                    </label>
+                  </td>
+                  <td style="font-size:0.8rem; letter-spacing:1px;">${hwBadges}</td>
+                  <td>
+                    <button class="btn-action" style="padding:6px 12px; font-size:0.8rem;" onclick="armEnrollment(${u.id}, '${escapeHtml(fullName)}')">Enroll</button>
+                  </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--danger);">${err.message}</td></tr>`;
+    }
+}
+
+async function updateRole(userId, role) {
+    const fd = new FormData();
+    fd.append('action', 'update_role');
+    fd.append('user_id', userId);
+    fd.append('role', role);
+    const res  = await fetch(SETTINGS_API, { method: 'POST', body: fd });
+    const json = await res.json();
+    showMsg(json.message || json.status);
+}
+
+async function updateMfa(userId, enabled) {
+    const fd = new FormData();
+    fd.append('action', 'update_mfa');
+    fd.append('user_id', userId);
+    fd.append('enabled', enabled ? 1 : 0);
+    fd.append('method', enabled ? 'esp32' : 'none');
+    const res  = await fetch(SETTINGS_API, { method: 'POST', body: fd });
+    const json = await res.json();
+    showMsg(json.message || json.status);
+}
+
+let enrollPollTimer = null;
+async function armEnrollment(userId, name) {
+    if (!confirm(`Arm ESP32 enrollment for ${name}? They must be at the cabinet to tap card, place finger, and enter passcode.`)) return;
+
+    const fd = new FormData();
+    fd.append('action', 'start_esp32_enroll');
+    fd.append('user_id', userId);
+    const res  = await fetch(SETTINGS_API, { method: 'POST', body: fd });
+    const json = await res.json();
+    if (json.status !== 'success') return showMsg(json.message || 'Failed.');
+
+    showMsg('Enrollment armed. Watching device progress...');
+    if (enrollPollTimer) clearInterval(enrollPollTimer);
+    enrollPollTimer = setInterval(() => pollEnrollment(userId), 2000);
+}
+
+const STEP_LABELS = {
+    0: 'Waiting for device...',
+    1: 'Step 1/4 — Tap RFID card',
+    2: 'Step 2/4 — Place finger on sensor',
+    3: 'Step 3/4 — Enter passcode on keypad',
+    4: 'Step 4/4 — Saving to server',
+};
+
+async function pollEnrollment(userId) {
+    try {
+        const res  = await fetch(`${SETTINGS_API}?action=enroll_status&user_id=${userId}`);
+        const json = await res.json();
+        if (!json || json.status !== 'success' || !json.data) return;
+
+        const { step, active } = json.data;
+        document.getElementById('modalBody').innerText = STEP_LABELS[step] || `Step ${step}`;
+
+        if (active == 0 && step == 0) {
+            clearInterval(enrollPollTimer);
+            enrollPollTimer = null;
+            document.getElementById('modalBody').innerText = 'Enrollment complete.';
+            loadUsers();
+        }
+    } catch (e) { /* ignore transient */ }
+}
+
+// -----------------------------------------------------
+// ESP32 NETWORK / SECURITY CARD STUBS
+// -----------------------------------------------------
+async function saveNetworkSettings() {
+    const ssid = document.getElementById('espWifiSsid').value;
+    const pass = document.getElementById('espWifiPass').value;
+    const url  = document.getElementById('espServerUrl').value;
+    if (!ssid || !pass || !url) return showMsg("Please complete all network fields.");
+    showMsg(`Network config noted. The ESP32 sketch reads its WiFi from CFMS_V2.ino — re-flash to apply changes.`);
+}
+
+async function saveSecuritySettings() {
+    showMsg('MFA factor preferences are stored per-user in the User Security Management table below.');
+}
+
+function triggerEnrollment() {
+    showMsg("Use the 'Enroll' button next to a specific user in the User Security Management table.");
+}
+
+async function triggerRelay() {
+    if (!confirm("Test Cabinet Solenoid Locks? This will arm Relay 1 once.")) return;
+    const fd = new FormData();
+    fd.append('relay', '0');
+    try {
+        const res = await fetch('../Backend/activate_relay.php', { method: 'POST', body: fd });
+        const txt = await res.text();
+        showMsg(txt === 'RELAY_ENABLED' ? 'Relay armed — ESP32 should pick this up on its next poll.' : `Server: ${txt}`);
+    } catch (e) {
+        showMsg('Failed to reach activate_relay.php');
+    }
+}
+
+// -----------------------------------------------------
+// HARDWARE AUDIT LOG
+// -----------------------------------------------------
+async function loadHardwareLog() {
+    const body = document.getElementById('hwLogBody');
+    try {
+        const res  = await fetch(`${SETTINGS_API}?action=get_hardware_log&limit=50`);
+        const json = await res.json();
+        if (json.status !== 'success') throw new Error(json.message || 'Failed');
+
+        if (!json.data.length) {
+            body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-dim);">No attempts recorded yet.</td></tr>';
+            return;
+        }
+
+        body.innerHTML = json.data.map(row => {
+            const when     = new Date(row.created_at.replace(' ', 'T')).toLocaleString();
+            const userName = row.user_name && row.user_name.trim() ? escapeHtml(row.user_name) : '<span style="color:var(--text-dim)">unknown</span>';
+            const factors  = `<span style="font-family:monospace;">${row.rfid_ok==1?'✓':'✗'} ${row.fingerprint_ok==1?'✓':'✗'} ${row.passcode_ok==1?'✓':'✗'}</span>`;
+            const resultBadge = row.result === 'granted'
+                ? '<span style="color:var(--success); font-weight:700;">GRANTED</span>'
+                : '<span style="color:var(--danger); font-weight:700;">DENIED</span>';
+            return `
+                <tr>
+                  <td style="font-size:.8rem;">${when}</td>
+                  <td>${userName}</td>
+                  <td style="font-family:monospace; font-size:.8rem;">${escapeHtml(row.rfid_uid || '—')}</td>
+                  <td>${factors}</td>
+                  <td>${resultBadge}</td>
+                  <td style="font-family:monospace; font-size:.75rem; color:var(--text-dim);">${escapeHtml(row.device_ip || '—')}</td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--danger);">${err.message}</td></tr>`;
+    }
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// -----------------------------------------------------
+// UTILITIES
+// -----------------------------------------------------
+function showMsg(txt) { document.getElementById('modalBody').innerText = txt; document.getElementById('modalOverlay').style.display = 'flex'; }
+function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+function handleLogout() { if(confirm("Confirm Logout?")) window.location.href = "../Backend/logout.php"; }
+
+</script>
+</body>
+</html>

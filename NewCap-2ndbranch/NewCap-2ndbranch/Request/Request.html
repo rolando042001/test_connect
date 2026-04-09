@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Requests | EuFile</title>
+    <link href="../styles.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .dropdown-container { max-height: 0; overflow: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .dropdown-container.show { max-height: 500px; }
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        @media (max-width: 1024px) {
+            #sidebar { transform: translateX(-100%); }
+            #sidebar.open { transform: translateX(0); }
+        }
+
+        /* Animations */
+        #bulkActionsBar { transition: all 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28); backdrop-filter: blur(12px); }
+        @keyframes toast-in { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .animate-toast { animation: toast-in 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+        
+        /* Grid Transition */
+        .view-transition { transition: opacity 0.3s ease, transform 0.3s ease; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 flex h-screen overflow-hidden">
+
+    <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+
+    <aside id="sidebar" class="fixed lg:static w-72 bg-slate-900 flex flex-col h-full z-50 shrink-0 overflow-y-auto">
+    <div class="p-8 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-[#03acfa] rounded-xl flex items-center justify-center shadow-lg shadow-[#03acfa]/20">
+                <i data-lucide="cloud" class="text-white w-6 h-6"></i>
+            </div>
+            <span class="font-black text-xl tracking-tight text-white uppercase">EuFile</span>
+        </div>
+        <button onclick="toggleSidebar()" class="lg:hidden text-slate-400 p-1 hover:text-white transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+    </div>
+
+    <nav class="flex-1 px-4 space-y-8 pt-4 font-sans">
+        <div>
+            <p class="px-4 text-[11px] font-bold text-slate-500 uppercase tracking-[2px] mb-4">Main Navigation</p>
+            <a href="../Landing/Dashboard.html" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition-all">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="font-semibold text-sm">Dashboard</span>
+            </a>
+        </div>
+
+        <div>
+            <p class="px-4 text-[11px] font-bold text-slate-500 uppercase tracking-[2px] mb-4">Workspace</p>
+            <div class="space-y-1">
+                <button onclick="toggleDepartments()" class="w-full flex items-center justify-between px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl group transition-all">
+                    <div class="flex items-center gap-3"><i data-lucide="layers" class="w-5 h-5 group-hover:text-[#03acfa]"></i><span class="font-semibold text-sm">Departments</span></div>
+                    <i data-lucide="chevron-down" id="dropArrow" class="w-4 h-4 transition-transform"></i>
+                </button>
+                <div id="deptDropdown" class="dropdown-container space-y-1 px-4 mt-2 border-l-2 border-slate-800 ml-6 text-slate-500 font-bold text-xs uppercase"></div>
+                
+                <a href="Request.html" class="flex items-center justify-between px-4 py-3 bg-[#03acfa] text-white rounded-xl shadow-md shadow-[#03acfa]/20 transition-all group">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="bell" class="w-5 h-5"></i>
+                        <span class="font-semibold text-sm">Access Requests</span>
+                    </div>
+                    <div id="requestBadge" class="hidden relative flex h-5 w-5 items-center justify-center">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span id="requestBadgeCount" class="relative inline-flex rounded-full h-5 w-5 bg-rose-500 text-[10px] font-black text-white items-center justify-center">0</span>
+                    </div>
+                </a>
+                
+                <a href="../Document/E-vault.html" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition-all group">
+                    <i data-lucide="hard-drive" class="w-5 h-5 group-hover:text-[#03acfa]"></i>
+                    <span class="font-semibold text-sm">E-Cabinet</span>
+                </a>
+            </div>
+        </div>
+
+        <div>
+            <p class="px-4 text-[11px] font-bold text-slate-500 uppercase tracking-[2px] mb-4">System</p>
+            <div class="space-y-1">
+                <a href="../Archive/Archive.html" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition-all group"><i data-lucide="archive" class="w-5 h-5 group-hover:text-[#03acfa]"></i><span class="font-semibold text-sm">Archives</span></a>
+                <a href="../Trash/Trash.html" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition-all group"><i data-lucide="trash-2" class="w-5 h-5 group-hover:text-[#03acfa]"></i><span class="font-semibold text-sm">Trash bin</span></a>
+                <a href="../Settings/Settings.html" class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition-all group"><i data-lucide="settings" class="w-5 h-5 group-hover:text-[#03acfa]"></i><span class="font-semibold text-sm">Settings</span></a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="p-6 border-t border-slate-800">
+        <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 px-4 py-3 text-rose-400 border border-rose-400/20 hover:bg-rose-500 hover:text-white rounded-xl font-bold transition-all text-sm uppercase"><i data-lucide="log-out" class="w-4 h-4"></i> Log Out</button>
+    </div>
+</aside>
+
+    <main class="flex-1 overflow-y-auto scroll-smooth w-full">
+        <div class="lg:hidden bg-white border-b border-slate-200 p-4 flex items-center justify-between sticky top-0 z-30">
+            <span class="font-black text-slate-900 uppercase">EuFile</span>
+            <button onclick="toggleSidebar()" class="p-2 bg-slate-100 rounded-lg"><i data-lucide="menu"></i></button>
+        </div>
+
+        <div class="p-6 lg:p-12 max-w-[1600px] mx-auto w-full relative">
+            
+            <div class="flex flex-col xl:flex-row xl:items-end justify-between gap-8 mb-12">
+                <div>
+                    <h1 class="text-3xl font-black tracking-tight text-slate-900 mb-2 uppercase leading-none">Access Requests</h1>
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] font-black text-[#03acfa] bg-[#03acfa]/10 px-3 py-1.5 rounded-lg uppercase tracking-widest">Protocol Management</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="bg-white p-1 rounded-xl border border-slate-200 flex shadow-sm">
+                        <button onclick="switchView('list')" id="view-list" class="p-2 rounded-lg transition-all bg-[#03acfa] text-white"><i data-lucide="list" class="w-4 h-4"></i></button>
+                        <button onclick="switchView('grid')" id="view-grid" class="p-2 rounded-lg transition-all text-slate-400 hover:text-slate-900"><i data-lucide="layout-grid" class="w-4 h-4"></i></button>
+                    </div>
+
+                    <div class="relative w-full sm:w-64">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                        <input type="text" id="staffSearch" onkeyup="applyFilters()" placeholder="Search directory..." class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-4 focus:ring-[#03acfa]/10 transition-all">
+                    </div>
+                    
+                    <button onclick="renderRequests()" class="p-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all active:scale-95">
+                        <i id="refreshIcon" data-lucide="refresh-cw" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="listViewContainer" class="bg-white rounded-[40px] border border-slate-200 shadow-sm overflow-hidden mb-12">
+                <div class="overflow-x-auto no-scrollbar">
+                    <table class="w-full text-left min-w-[1000px]">
+                        <thead>
+                            <tr class="bg-slate-50/50">
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-20 text-center">
+                                    <input type="checkbox" id="selectAll" onclick="toggleAllPending()" class="w-5 h-5 rounded-lg border-slate-300 text-[#03acfa] focus:ring-[#03acfa] cursor-pointer transition-all">
+                                </th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Requester</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Item</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Reason</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTableBody" class="divide-y divide-slate-50"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="gridViewContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-12"></div>
+
+            <div id="paginationContainer" class="flex justify-center items-center gap-4 py-8"></div>
+        </div>
+
+        <div id="bulkActionsBar" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-8 py-4 rounded-[28px] shadow-2xl z-[100] flex items-center gap-8 translate-y-[200%] opacity-0 border border-white/10">
+            <div class="flex items-center gap-3 pr-8 border-r border-white/10">
+                <div class="w-8 h-8 bg-[#03acfa] rounded-full flex items-center justify-center font-black text-xs" id="selectedCount">0</div>
+                <span class="text-xs font-black uppercase tracking-widest">Selected</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="bulkAction('approved')" class="px-6 py-2 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all">Approve All</button>
+                <button onclick="bulkAction('denied')" class="px-6 py-2 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all">Deny All</button>
+                <button onclick="clearSelection()" class="px-4 py-2 text-slate-400 hover:text-white text-[10px] font-black uppercase tracking-widest">Cancel</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="toastContainer" class="fixed top-8 right-8 z-[300] flex flex-col gap-4 w-80 font-sans"></div>
+
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[400] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-[40px] p-12 w-full max-w-sm text-center shadow-2xl animate-toast my-auto">
+            <div id="confirmIconContainer" class="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner italic">
+                <i data-lucide="help-circle" class="w-10 h-10"></i>
+            </div>
+            <h3 id="confirmTitle" class="text-2xl font-black text-slate-900 mb-3 uppercase tracking-tight font-sans">Are you sure?</h3>
+            <p id="confirmDesc" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-10 leading-relaxed px-4 font-sans">Verify system credentials before confirming this action.</p>
+            <div class="flex gap-4 font-sans">
+                <button onclick="closeConfirmModal()" class="flex-1 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Abort</button>
+                <button id="executeBtn" class="flex-1 py-5 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let requestItems = [], filteredItems = [], currentPage = 1, selectedItems = new Set();
+        let viewMode = 'list'; // 'list' or 'grid'
+        const itemsPerPage = 8;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initSidebar();
+            renderRequests();
+        });
+
+            async function initSidebar() {
+        try {
+            const res = await fetch("../Backend/get_Departments.php");
+            const depts = await res.json();
+            // Spacing: py-2, Font: font-bold text-xs uppercase (inherited from container)
+            document.getElementById("deptDropdown").innerHTML = depts.map(d => 
+                `<a href="../Departments/Departments.html?dept=${encodeURIComponent(d.name)}" class="block py-2 hover:text-[#03acfa] transition-all">${d.name}</a>`
+            ).join('');
+        } catch (e) { console.error(e); }
+    }
+
+        async function renderRequests() {
+            const refreshIcon = document.getElementById('refreshIcon');
+            refreshIcon?.classList.add('animate-spin');
+            try {
+                const res = await fetch('get_requests.php');
+                requestItems = await res.json();
+                filteredItems = [...requestItems];
+                
+                const pendingCount = requestItems.filter(r => r.status === 'pending').length;
+                const b = document.getElementById('requestBadge'), bc = document.getElementById('requestBadgeCount');
+                if (b && bc) { bc.innerText = pendingCount > 9 ? '9+' : pendingCount; b.classList.toggle('hidden', pendingCount === 0); }
+                
+                renderTable();
+                renderGrid();
+            } catch (err) { showToast("Failed to fetch records", "error"); }
+            finally { setTimeout(() => refreshIcon?.classList.remove('animate-spin'), 600); }
+        }
+
+        function switchView(mode) {
+            viewMode = mode;
+            document.getElementById('listViewContainer').classList.toggle('hidden', mode !== 'list');
+            document.getElementById('gridViewContainer').classList.toggle('hidden', mode !== 'grid');
+            
+            document.getElementById('view-list').className = mode === 'list' ? 'p-2 rounded-lg transition-all bg-[#03acfa] text-white shadow-md' : 'p-2 rounded-lg transition-all text-slate-400 hover:text-slate-900';
+            document.getElementById('view-grid').className = mode === 'grid' ? 'p-2 rounded-lg transition-all bg-[#03acfa] text-white shadow-md' : 'p-2 rounded-lg transition-all text-slate-400 hover:text-slate-900';
+            
+            renderTable(); renderGrid();
+        }
+
+        function renderTable() {
+            const tableBody = document.getElementById('requestsTableBody');
+            const paginated = filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+            
+            const bulkBar = document.getElementById("bulkActionsBar");
+            if (selectedItems.size > 0) { bulkBar.classList.remove('translate-y-[200%]', 'opacity-0'); document.getElementById("selectedCount").innerText = selectedItems.size; }
+            else { bulkBar.classList.add('translate-y-[200%]', 'opacity-0'); }
+
+            if (!paginated.length) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="p-24 text-center font-black text-slate-200 uppercase tracking-widest text-xs">No records found</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = paginated.map(req => {
+                const isSelected = selectedItems.has(req.id);
+                const isPending = req.status === 'pending';
+                const isApproved = req.status === 'approved';
+                const checkColor = isApproved ? 'text-emerald-500' : 'text-slate-200';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition-all ${isSelected ? 'bg-indigo-50/50' : ''}" onclick="toggleSelect(${req.id}, event, '${req.status}')">
+                        <td class="px-8 py-6 text-center">
+                            <input type="checkbox" onclick="event.stopPropagation(); toggleSelect(${req.id}, event, '${req.status}')" class="w-5 h-5 rounded-lg border-slate-300 text-[#03acfa] focus:ring-[#03acfa] cursor-pointer transition-all" ${isSelected ? 'checked' : ''} ${!isPending ? 'disabled opacity-0' : ''}>
+                        </td>
+                        <td class="px-8 py-6">
+                            <div class="flex items-center gap-4 font-sans">
+                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-black text-[#03acfa] border-2 border-white shadow-sm uppercase">${req.first_name.charAt(0)}</div>
+                                <div><p class="text-[14px] font-black text-slate-900 uppercase leading-none mb-1">${req.first_name} ${req.last_name}</p><p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">${req.role}</p></div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6 font-bold text-sm text-slate-700 tracking-tight"><div class="flex items-center gap-2"><i data-lucide="file-text" class="w-4 h-4 text-slate-300"></i>${req.folder}</div></td>
+                        <td class="px-8 py-6 text-xs text-slate-400 italic max-w-[200px] truncate">"${req.reason}"</td>
+                        <td class="px-8 py-6 text-right">
+                            ${isPending ? `
+                                <div class="flex justify-end gap-2 action-btns">
+                                    <button onclick="event.stopPropagation(); askConfirm(${req.id}, 'approved')" class="p-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all shadow-md active:scale-90"><i data-lucide="check" class="w-4 h-4"></i></button>
+                                    <button onclick="event.stopPropagation(); askConfirm(${req.id}, 'denied')" class="p-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-all shadow-md active:scale-90"><i data-lucide="x" class="w-4 h-4"></i></button>
+                                </div>
+                            ` : `<i data-lucide="shield-check" class="w-5 h-5 ${checkColor} ml-auto transition-colors duration-500"></i>`}
+                        </td>
+                    </tr>`;
+            }).join('');
+            lucide.createIcons();
+            renderPagination();
+        }
+
+        function renderGrid() {
+            const gridContainer = document.getElementById('gridViewContainer');
+            const paginated = filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+            if (!paginated.length) { gridContainer.innerHTML = ""; return; }
+
+            gridContainer.innerHTML = paginated.map(req => {
+                const isApproved = req.status === 'approved';
+                const stStyle = req.status === 'pending' ? 'bg-amber-100 text-amber-600' : isApproved ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600';
+
+                return `
+                    <div class="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm relative group hover:border-[#03acfa]/40 transition-all">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center font-black text-[#03acfa] uppercase text-xl">${req.first_name.charAt(0)}</div>
+                            <span class="text-[9px] font-black px-2.5 py-1 rounded-md uppercase tracking-widest ${stStyle}">${req.status}</span>
+                        </div>
+                        <h4 class="text-base font-black text-slate-900 uppercase leading-none mb-1 tracking-tight">${req.first_name} ${req.last_name}</h4>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">${req.role}</p>
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Requested Access</p>
+                            <p class="text-xs font-bold text-slate-700 truncate"><i data-lucide="folder" class="w-3 h-3 inline mr-2 text-[#03acfa]"></i>${req.folder}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            ${req.status === 'pending' ? `
+                                <button onclick="askConfirm(${req.id}, 'approved')" class="flex-1 py-3 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Approve</button>
+                                <button onclick="askConfirm(${req.id}, 'denied')" class="flex-1 py-3 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Deny</button>
+                            ` : `<div class="w-full text-center py-3 text-[10px] font-black uppercase tracking-widest text-slate-300">Request Resolved</div>`}
+                        </div>
+                    </div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // STACKABLE TOAST LOGIC
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toastContainer");
+            const toast = document.createElement("div");
+            const styles = {
+                success: 'bg-white border-emerald-500 text-emerald-700',
+                error: 'bg-white border-rose-500 text-rose-700',
+                info: 'bg-white border-[#03acfa] text-[#03acfa]'
+            };
+            toast.className = `p-4 rounded-[24px] border-l-4 shadow-xl flex items-center gap-4 animate-toast ${styles[type]} font-sans`;
+            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-6 h-6"></i>
+                               <span class="text-[10px] font-black uppercase tracking-[2px] leading-none">${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            setTimeout(() => {
+                toast.classList.add('opacity-0', '-translate-y-4', 'transition-all', 'duration-500');
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+
+        // Confirm Logic
+        let activeId = null, activeStatus = '';
+        function askConfirm(id, status) {
+            activeId = id; activeStatus = status;
+            const m = document.getElementById('confirmModal'), i = document.getElementById('confirmIconContainer'), b = document.getElementById('executeBtn');
+            if(status === 'approved') { 
+                i.className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-[32px] flex items-center justify-center mx-auto mb-8"; 
+                b.className="flex-1 py-5 bg-emerald-500 text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-xl";
+                document.getElementById('confirmTitle').innerText="Authorize Link";
+            } else { 
+                i.className="w-24 h-24 bg-rose-50 text-rose-500 rounded-[32px] flex items-center justify-center mx-auto mb-8"; 
+                b.className="flex-1 py-5 bg-rose-500 text-white rounded-[20px] font-black text-xs uppercase tracking-widest shadow-xl";
+                document.getElementById('confirmTitle').innerText="Reject Access";
+            }
+            m.classList.remove('hidden'); m.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        document.getElementById('executeBtn').addEventListener('click', async () => {
+            if(activeId) await processRequest(activeId, activeStatus);
+            closeConfirmModal();
+        });
+
+        async function processRequest(id, status) {
+            const fd = new FormData(); fd.append('id', id); fd.append('status', status);
+            try {
+                const res = await fetch('update_request.php', { method: 'POST', body: fd });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    showToast(`Security protocol: access ${status}`, "success");
+                    renderRequests(); 
+                } else { showToast("Protocol error: breach detected", "error"); }
+            } catch (err) { showToast("System connection failure", "error"); }
+        }
+
+        async function bulkAction(status) {
+            const ids = Array.from(selectedItems);
+            showToast(`Processing batch: ${ids.length} entries...`, "info");
+            for (let id of ids) {
+                const fd = new FormData(); fd.append('id', id); fd.append('status', status);
+                await fetch('update_request.php', { method: 'POST', body: fd });
+            }
+            selectedItems.clear(); showToast(`Batch sequence ${status}`, "success"); renderRequests();
+        }
+
+        function toggleSelect(id, e, status) {
+            if (e.target.closest('.action-btns') || status !== 'pending') return;
+            selectedItems.has(id) ? selectedItems.delete(id) : selectedItems.add(id);
+            renderTable();
+        }
+
+        function toggleAllPending() {
+            const check = document.getElementById('selectAll').checked;
+            requestItems.forEach(r => { if(r.status === 'pending') check ? selectedItems.add(r.id) : selectedItems.delete(r.id); });
+            renderTable();
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('staffSearch').value.toLowerCase();
+            filteredItems = requestItems.filter(req => `${req.first_name} ${req.last_name}`.toLowerCase().includes(query) || req.folder.toLowerCase().includes(query));
+            currentPage = 1; renderTable(); renderGrid();
+        }
+
+        function renderPagination() {
+            const container = document.getElementById("paginationContainer"), total = filteredItems.length, totalPages = Math.ceil(total / itemsPerPage);
+            if (!total) { container.innerHTML = ""; return; }
+            container.innerHTML = `<button onclick="changePage(-1)" class="p-3 bg-white border border-slate-200 rounded-xl disabled:opacity-30 shadow-sm" ${currentPage === 1 ? 'disabled' : ''}><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Page ${currentPage} / ${totalPages}</span>
+                <button onclick="changePage(1)" class="p-3 bg-white border border-slate-200 rounded-xl disabled:opacity-30 shadow-sm" ${currentPage === totalPages ? 'disabled' : ''}><i data-lucide="chevron-right" class="w-4 h-4"></i></button>`;
+            lucide.createIcons();
+        }
+
+        function changePage(d) { currentPage += d; renderTable(); renderGrid(); }
+        function clearSelection() { selectedItems.clear(); renderTable(); }
+        function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); document.getElementById('confirmModal').classList.remove('flex'); }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('hidden'); }
+        function toggleDepartments() { document.getElementById("deptDropdown").classList.toggle("show"); document.getElementById("dropArrow").classList.toggle("rotate-180"); }
+        function handleLogout() { if(confirm("Terminate Admin Session?")) window.location.href = "../Backend/logout.php"; }
+    </script>
+</body>
+</html>

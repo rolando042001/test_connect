@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Private Cabinet | EuFile Workspace</title>
+    <style>
+        :root {
+            --primary: #03acfa;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: rgba(255,255,255,0.05);
+            --bg-main: #f1f5f9;
+            --text-main: #1e293b;
+            --border: #e2e8f0;
+            --text-dim: #64748b;
+            --white: #ffffff;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        body { margin: 0; font-family: "Segoe UI", sans-serif; display: flex; height: 100vh; background: var(--bg-main); overflow: hidden; }
+
+        /* ===== USER SIDEBAR ===== */
+        aside { width: 260px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; flex-shrink: 0; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .brand { padding: 25px 20px; font-weight: 800; font-size: 1.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); color: #60a5fa; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .nav-scroll { flex: 1; overflow-y: auto; padding: 15px 10px; }
+        .menu-category { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; margin: 15px 10px 5px; font-weight: 800; letter-spacing: 0.5px; }
+        .nav-item { padding: 12px 15px; border-radius: 8px; color: white; display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; transition: 0.2s; font-weight: 600; }
+        .nav-item:hover, .nav-item.active { background: var(--sidebar-hover); color: white; }
+        .nav-item.active { background: var(--primary) !important; box-shadow: 0 4px 12px rgba(3, 172, 250, 0.2); }
+        .nav-item span svg { stroke: white; }
+        .logout-section { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn-logout { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; text-align: center; }
+        .btn-logout:hover { background: var(--danger); color: white; }
+
+        /* ===== MAIN HEADER & TOOLBAR ===== */
+        main { flex: 1; padding: 40px; overflow-y: auto; max-width: 1400px; margin: 0 auto; position: relative; }
+        .header-card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid var(--border); }
+        .breadcrumb-nav { display: flex; gap: 8px; color: var(--text-dim); font-size: 0.9rem; font-weight: 600; margin-bottom: 15px; align-items: center; }
+        .breadcrumb-nav span { cursor: pointer; transition: 0.2s; }
+        .breadcrumb-nav span:hover { color: var(--primary); }
+
+        .toolbar-top { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+        .toolbar-right-group { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: flex-end; }
+
+        .search-wrapper { position: relative; width: 300px; }
+        .search-wrapper svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; }
+        .search-input { width: 100%; padding: 10px 15px 10px 40px !important; border-radius: 10px; border: 1px solid var(--border); background: #f8fafc; font-size: 0.85rem; outline: none; transition: 0.2s; box-sizing: border-box; }
+        .search-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(3, 172, 250, 0.1); }
+
+        .filter-bar-right { display: flex; gap: 5px; background: #f1f5f9; padding: 4px; border-radius: 10px; align-items: center; }
+        .view-btn { padding: 6px 12px; border-radius: 7px; border: none; background: transparent; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--text-dim); display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .view-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        /* ===== CONTENT GRID (MINIMALIST STYLE) ===== */
+        .grid-layout { display: none; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .item-card { background: white; padding: 35px 20px 20px; border-radius: 16px; border: 1px solid var(--border); text-align: center; position: relative; transition: 0.2s; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .item-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); }
+        .item-card.is-cutting { opacity: 0.4; filter: grayscale(0.5); border: 2px dashed var(--primary); }
+        .item-card.selected { border-color: var(--primary); background: rgba(3, 172, 250, 0.05); }
+
+        .selection-dot { position: absolute; top: 15px; left: 15px; width: 20px; height: 20px; background: white; border: 2px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; z-index: 10; }
+        .item-card:hover .selection-dot, .item-card.selected .selection-dot { opacity: 1; }
+        .item-card.selected .selection-dot { background: var(--primary); border-color: var(--primary); }
+
+        .ellipsis-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; color: var(--text-dim); background: transparent; border: none; z-index: 20; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; transition: 0.2s; }
+        .ellipsis-btn:hover { background: #f1f5f9; color: var(--primary); }
+
+        .item-icon-wrapper { margin-bottom: 15px; display: flex; align-items: center; justify-content: center; }
+        .item-icon { transition: transform 0.2s ease, stroke 0.2s ease, fill 0.2s ease; }
+        .item-card:hover .item-icon.folder-icon { transform: scale(1.08); fill: rgba(3, 172, 250, 0.15); }
+        .item-card:hover .item-icon.file-icon { transform: scale(1.08); stroke: var(--text-main); }
+        
+        .item-name { font-weight: 700; color: var(--text-main); display: block; padding: 0 10px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
+
+        /* ===== LIST VIEW ===== */
+        .list-layout { display: none; background: white; border-radius: 12px; border: 1px solid var(--border); overflow: visible; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8fafc; text-align: left; padding: 15px 20px; font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 0.9rem; position: relative; }
+        tr.selected td { background: rgba(3, 172, 250, 0.05); }
+        .list-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+
+        /* ===== BATCH ACTIONS BAR ===== */
+        #bulkActionsBar { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%) translateY(150%); background: #0f172a; padding: 14px 28px; border-radius: 14px; display: none; align-items: center; gap: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); z-index: 10000; border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        #bulkActionsBar.active { display: flex; transform: translateX(-50%) translateY(0); }
+        .bulk-info { color: white; font-weight: 700; padding-right: 15px; border-right: 1px solid rgba(255, 255, 255, 0.2); }
+        .btn-bulk { background: transparent; color: white; border: 1px solid rgba(255, 255, 255, 0.2); padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-bulk:hover { background: rgba(255, 255, 255, 0.1); }
+        .btn-bulk.primary { background: var(--primary); border: none; }
+        .btn-bulk.danger { background: var(--danger); border: none; }
+
+        /* ===== PROFESSIONAL PAGINATION ===== */
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 0.85rem; }
+        .pagination-info { color: var(--text-dim); }
+        .pagination-controls { display: flex; gap: 5px; align-items: center; }
+        .page-btn { padding: 6px 12px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; color: var(--text-main); font-weight: 600; transition: 0.2s; }
+        .page-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #f8fafc; }
+        .limit-select { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); outline: none; background: white; color: var(--text-main); font-weight: 600; cursor: pointer; }
+
+        /* ===== CONTEXT MENU ===== */
+        .context-menu { position: fixed; background: rgba(255, 255, 255, 0.98); border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); min-width: 180px; z-index: 10000; display: none; padding: 6px; backdrop-filter: blur(10px); }
+        .menu-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 0.85rem; font-weight: 600; color: #475569; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .menu-item:hover { background: #f1f5f9; color: var(--primary); }
+        .menu-item svg { width: 16px; height: 16px; stroke-width: 2; }
+        .menu-item.delete { color: var(--danger); }
+        .menu-item.delete:hover { background: #fef2f2; color: #dc2626; }
+        .menu-divider { height: 1px; background: #f1f5f9; margin: 6px 0; }
+
+        /* PROGRESS & MODALS */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal { background: white; padding: 30px; border-radius: 16px; width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .progress-container { width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; margin-top: 15px; overflow: hidden; display: none; }
+        .progress-bar { height: 100%; width: 0%; background: var(--primary); transition: width 0.2s ease; }
+        .progress-text { font-size: 0.8rem; color: var(--text-dim); margin-top: 5px; text-align: right; display: none; font-weight: 700; }
+        #dragOverlay { position: fixed; inset: 0; background: rgba(3, 172, 250, 0.85); backdrop-filter: blur(5px); z-index: 20000; display: none; align-items: center; justify-content: center; color: white; flex-direction: column; border: 4px dashed rgba(255,255,255,0.5); margin: 20px; border-radius: 24px; pointer-events: none; transition: 0.3s; }
+        #dragOverlay.active { display: flex; pointer-events: auto; }
+        
+        .toast { background: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border-left: 5px solid var(--primary); animation: slideIn 0.3s ease-out forwards; min-width: 300px; z-index: 10000; }
+        .toast.success { border-left-color: #10b981; }
+        .toast.error { border-left-color: var(--danger); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* PREVIEW OVERLAY */
+        #previewOverlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(12px); display: none; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
+        .preview-container { width: 100%; max-width: 1400px; height: 95vh; background: #ffffff; border-radius: 24px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .preview-header { padding: 15px 25px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; height: 70px; box-sizing: border-box; }
+        .file-meta-header { display: flex; align-items: center; gap: 15px; min-width: 0; flex: 1; }
+        .file-icon-box { width: 40px; height: 40px; background: #eff6ff; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--primary); }
+        .file-info-text { min-width: 0; }
+        .file-info-text h3 { margin: 0; font-size: 0.95rem; color: #0f172a; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 500px; }
+        .preview-actions-group { display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: 20px; }
+        .preview-body { display: flex; flex: 1; overflow: hidden; background: #f1f5f9; }
+        #previewContent { flex: 3; display: flex; justify-content: center; align-items: center; padding: 40px; overflow: auto; }
+        #previewContent img { max-width: 100%; max-height: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border-radius: 8px; }
+        .preview-sidebar { width: 350px; background: white; border-left: 1px solid #e2e8f0; padding: 30px; display: flex; flex-direction: column; gap: 25px; }
+        .info-tile { padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; }
+        .info-tile label { font-size: 0.7rem; color: #64748b; font-weight: 800; text-transform: uppercase; }
+        .info-tile p { margin: 5px 0 0; font-size: 0.9rem; font-weight: 700; color: #1e293b; }
+        .btn-preview-download { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-preview-download:hover { background: #059669; }
+    </style>
+</head>
+<body>
+
+<aside>
+    <div class="brand" onclick="window.location.href='User_Dashboard.html'">☁️ EuFile Workspace</div>
+    <div class="nav-scroll">
+        <div class="menu-category">Main</div>
+        <a href="User_Dashboard.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span> My Dashboard</a>
+        
+        <div class="menu-category">Storage</div>
+        <a href="User_PrivateVault.html" class="nav-item active"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span> Private Cabinet</a>
+        <a href="User_DeptVault.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span> Department Vault</a>
+        
+        <div class="menu-category">Requests</div>
+        <a href="User_Requests.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span> My Requests</a>
+
+        <div class="menu-category">Records</div>
+        <a href="User_Archive.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect></svg></span> My Archive</a>
+        <a href="User_Trash.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg></span> My Trash</a>
+        
+        <div class="menu-category">Account</div>
+        <a href="User_Profile.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path></svg></span> My Profile</a>
+    </div>
+    <div class="logout-section"><button class="btn-logout" onclick="handleLogout()">Sign Out</button></div>
+</aside>
+
+<main>
+    <div id="bulkActionsBar">
+        <div class="bulk-info"><span id="selectedCount">0</span> Selected</div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-bulk" onclick="batchCopy('copy')">Copy</button>
+            <button class="btn-bulk" onclick="batchCopy('cut')">Cut</button>
+            <button class="btn-bulk primary" onclick="batchArchive()">Archive</button>
+            <button class="btn-bulk danger" onclick="batchDelete()">Delete</button>
+            <button class="btn-bulk" onclick="clearSelection()" style="background:transparent; border: none; opacity:0.6;">Cancel</button>
+        </div>
+    </div>
+
+    <div class="header-card">
+        <div class="breadcrumb-nav" id="breadcrumb"></div>
+        <h1 style="margin: 5px 0 5px 0; font-size: 1.8rem; font-weight: 800;">My Private Cabinet</h1>
+        <p style="margin: 0 0 20px 0; color: var(--text-dim); font-size: 0.9rem;">Here you can upload drafts, personal computations, or working files that only you can see.</p>
+        <div class="toolbar-top">
+            <div style="display:flex; gap:10px;">
+                <button class="btn-bulk primary" style="padding: 10px 15px; border-radius: 8px;" onclick="openCreateModal('folder')">📁 New Folder</button>
+                <button class="btn-bulk" style="background:white; color:var(--text-main); border:1px solid var(--border); padding: 10px 15px; border-radius: 8px;" onclick="openCreateModal('file')">📄 Upload File</button>
+            </div>
+            <div class="toolbar-right-group">
+                <div class="search-wrapper">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="vaultSearch" class="search-input" placeholder="Search explorer...">
+                </div>
+                <div class="filter-bar-right">
+                    <button id="gridToggle" class="view-btn active" onclick="toggleViewMode('grid')"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span> Grid</button>
+                    <button id="listToggle" class="view-btn" onclick="toggleViewMode('list')"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line></svg></span> List</button>
+                </div>
+            </div>
+        </div>
+        <div id="navActions" style="margin-top:15px; display:none;"><button id="backBtn" class="page-btn" style="width:auto;" onclick="goBack()">Back</button></div>
+    </div>
+
+    <div id="vaultGrid" class="grid-layout"></div>
+    <div id="vaultList" class="list-layout">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:40px; text-align:center;">
+                        <input type="checkbox" id="selectAllCheckbox" class="list-checkbox" onclick="toggleSelectAll()">
+                    </th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Size</th>
+                    <th>Date</th>
+                    <th style="text-align:right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="vaultTableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="paginationContainer"></div>
+</main>
+
+<div id="modalOverlay" class="modal-overlay">
+    <div class="modal">
+        <h3 id="modalTitle" style="margin-bottom: 20px; color: var(--text-main); font-weight: 800;">Upload Files</h3>
+        <input type="text" id="itemName" class="search-input" style="width: 100%; margin-bottom: 15px; display: none;" placeholder="Enter folder name...">
+        <div id="uploadArea" style="border: 2px dashed var(--border); border-radius: 12px; padding: 40px 20px; text-align: center; cursor: pointer; background: #f8fafc;" onclick="document.getElementById('itemFile').click()">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" style="margin-bottom:12px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <p id="uploadText" style="margin:0; font-size:0.9rem; color:var(--text-main); font-weight:600;">Click to select files</p>
+            <p id="fileCount" style="margin:5px 0 0; font-size:0.8rem; color:var(--success); font-weight:700; display:none;"></p>
+        </div>
+        <input type="file" id="itemFile" style="display: none;" multiple onchange="updateFileLabel(this)">
+        
+        <div id="uploadProgressContainer" class="progress-container">
+            <div id="uploadProgressBar" class="progress-bar"></div>
+        </div>
+        <div id="uploadProgressText" class="progress-text">0%</div>
+
+        <div style="display: flex; gap: 12px; margin-top: 25px;">
+            <button id="cancelBtn" class="btn-logout" style="flex: 1; border-color: var(--border); color: var(--text-dim);" onclick="closeModal()">Cancel</button>
+            <button id="confirmBtn" class="btn-bulk primary" style="flex: 1;" onclick="saveItem()">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<div id="screenContextMenu" class="context-menu"></div>
+
+<div id="previewOverlay">
+    <div class="preview-container">
+        <div class="preview-header">
+            <div class="file-meta-header">
+                <div class="file-icon-box">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                </div>
+                <div class="file-info-text">
+                    <h3 id="prevName">Document.pdf</h3>
+                </div>
+            </div>
+            <div class="preview-actions-group">
+                <button class="btn-preview-download" id="prevDownloadBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Download
+                </button>
+                <div style="width:1px; height:24px; background:#e2e8f0; margin: 0 5px;"></div>
+                <button onclick="closePreview()" style="background:none; border:none; cursor:pointer; color:#94a3b8; display:flex; align-items:center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+        </div>
+        <div class="preview-body">
+            <div id="previewContent"></div>
+            <div class="preview-sidebar">
+                <h4 style="margin:0; font-size:0.9rem; color:#1e293b; text-transform:uppercase;">Document Insights</h4>
+                <div class="info-tile"><label>Storage Location</label><p id="prevPath">/Root</p></div>
+                <div class="info-tile"><label>File Size</label><p id="prevSize">0.00 KB</p></div>
+                <div class="info-tile"><label>Upload Date</label><p id="prevDate">-</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
+<script>
+// ======================================
+// E-VAULT JS - PRIVATE CABINET
+// ======================================
+
+let vaultState = { items: [], filtered: [], currentPage: 1, limit: 12 }; 
+let currentParentId = null; let currentDeptId = null; let currentPath = []; 
+let viewMode = "grid"; let currentModalType = null; let selectedItems = new Set();
+
+document.addEventListener("DOMContentLoaded", () => { initUI(); renderVaultFiles(); });
+
+function initUI() {
+    document.getElementById("vaultSearch")?.addEventListener("keyup", () => { vaultState.currentPage = 1; applyState(); });
+    document.querySelector("main").addEventListener("contextmenu", (e) => {
+        if (e.target.closest(".item-card") || e.target.closest("tr")) return;
+        e.preventDefault(); showGlobalContextMenu(e.clientX, e.clientY);
+    });
+    document.addEventListener("click", () => { const menu = document.getElementById("screenContextMenu"); if (menu) menu.style.display = "none"; });
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closePreview(); clearSelection(); }
+    });
+}
+
+function getProfessionalIcon(type, ext) {
+    const strokeColor = "#64748b"; 
+    if (type === "folder") {
+        return `<svg class="item-icon folder-icon" width="54" height="54" viewBox="0 0 24 24" fill="rgba(3,172,250,0.15)" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+    }
+    if (ext === "pdf") return `<svg class="item-icon file-icon" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></svg>`;
+    if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) return `<svg class="item-icon file-icon" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+    if (["xlsx", "xls", "csv"].includes(ext)) return `<svg class="item-icon file-icon" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 13h2"></path><path d="M8 17h2"></path><path d="M14 13h2"></path><path d="M14 17h2"></path></svg>`;
+    return `<svg class="item-icon file-icon" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
+}
+
+function renderItem(item, type, grid, tableBody) {
+    const name = item.name;
+    const ext = type === "file" ? name.split(".").pop().toLowerCase() : "";
+    
+    // Highlight items that are being cut
+    const clipboardData = JSON.parse(sessionStorage.getItem("private_clipboard") || "null");
+    const isCutting = clipboardData && clipboardData.mode === "cut" && clipboardData.items && clipboardData.items.some(i => Number(i.id) === Number(item.id));
+    
+    const isSelected = selectedItems.has(item.id);
+    const iconSVG = getProfessionalIcon(type, ext);
+
+    const card = document.createElement("div");
+    card.className = `item-card ${isCutting ? 'is-cutting' : ''} ${isSelected ? 'selected' : ''}`;
+    card.setAttribute('data-id', item.id);
+    card.innerHTML = `
+        <div class="selection-dot" onclick="toggleSelect(event, ${item.id})">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <button class="ellipsis-btn" onclick="event.stopPropagation(); showContextMenu(event, ${JSON.stringify(item).replace(/"/g, '&quot;')})">⋮</button>
+        <div class="item-icon-wrapper">${iconSVG}</div>
+        <span class="item-name" title="${name}">${name}</span>
+    `;
+    card.onclick = (e) => { e.ctrlKey ? toggleSelect(e, item.id) : handleItemClick(item, type, name); };
+    card.oncontextmenu = (e) => showContextMenu(e, item);
+    grid.appendChild(card);
+
+    const tr = document.createElement("tr");
+    tr.className = isSelected ? 'selected' : '';
+    tr.innerHTML = `
+        <td style="text-align:center;"><input type="checkbox" class="list-checkbox" ${isSelected ? 'checked' : ''} onclick="toggleSelect(event, ${item.id})"></td>
+        <td style="display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="handleItemClick(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${type}', '${name}')">
+            <div style="width:24px; display:flex; align-items:center;">${iconSVG.replace(/54|46/g, '24')}</div> 
+            <span style="font-weight:600;">${name}</span>
+        </td>
+        <td style="font-size:0.8rem; color:var(--text-dim);">${type.toUpperCase()}</td>
+        <td>${item.size ? formatSize(item.size) : "-"}</td>
+        <td>${item.date || "-"}</td>
+        <td style="text-align: right;"><button class="ellipsis-btn" style="position:static;" onclick="showContextMenu(event, ${JSON.stringify(item).replace(/"/g, '&quot;')})">⋮</button></td>
+    `;
+    tableBody.appendChild(tr);
+}
+
+function showSkeletonLoaders() {
+    const grid = document.getElementById("vaultGrid");
+    if(!grid) return;
+    grid.innerHTML = "";
+    for (let i = 0; i < vaultState.limit; i++) {
+        grid.innerHTML += `<div class="skeleton-card" style="background:white; padding:35px 20px; border-radius:16px; border:1px solid #e2e8f0; display:flex; flex-direction:column; align-items:center;"><div style="width:46px; height:46px; background:#e2e8f0; border-radius:12px; animation:pulse 1.5s infinite;"></div><div style="height:12px; background:#e2e8f0; margin-top:15px; width:70%; border-radius:4px; animation:pulse 1.5s infinite;"></div></div>`;
+    }
+}
+
+async function renderVaultFiles() {
+    const grid = document.getElementById("vaultGrid");
+    const tableBody = document.getElementById("vaultTableBody");
+    if(!grid || !tableBody) return;
+    showSkeletonLoaders();
+    try {
+        const parent = currentParentId ?? "";
+        const res = await fetch(`../User_Backend/get_private_vault.php?parent_id=${parent}`);
+        const data = await res.json();
+        vaultState.items = [...(data.folders || []).map(f => ({ ...f, type: 'folder' })), ...(data.files || []).map(f => ({ ...f, type: 'file' }))];
+        applyState();
+    } catch (err) { showToast("Error loading storage.", "error"); }
+}
+
+function applyState() {
+    const searchTerm = document.getElementById("vaultSearch")?.value.toLowerCase() || "";
+    vaultState.filtered = vaultState.items.filter(item => item.name.toLowerCase().includes(searchTerm));
+    vaultState.filtered.sort((a, b) => {
+        if (a.type === 'folder' && b.type !== 'folder') return -1;
+        if (a.type !== 'folder' && b.type === 'folder') return 1;
+        return a.name.localeCompare(b.name);
+    });
+    displayResults();
+    updateBreadcrumbs();
+    updateSelectionUI();
+    const selectAllCb = document.getElementById('selectAllCheckbox');
+    if (selectAllCb) selectAllCb.checked = (selectedItems.size === vaultState.filtered.length && vaultState.filtered.length > 0);
+}
+
+function displayResults() {
+    const grid = document.getElementById("vaultGrid");
+    const tableBody = document.getElementById("vaultTableBody");
+    grid.innerHTML = ""; tableBody.innerHTML = "";
+    const total = vaultState.filtered.length;
+    const start = (vaultState.currentPage - 1) * vaultState.limit;
+    const paginatedItems = vaultState.filtered.slice(start, start + vaultState.limit);
+
+    if (total === 0) grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-dim);padding:50px;">Folder is empty or no search results.</p>';
+    else paginatedItems.forEach(item => renderItem(item, item.type, grid, tableBody));
+    
+    toggleViewMode(viewMode);
+    renderPaginationUI();
+}
+
+function toggleViewMode(mode) {
+    viewMode = mode;
+    document.getElementById("vaultGrid").style.display = (mode === "grid") ? "grid" : "none";
+    document.getElementById("vaultList").style.display = (mode === "list") ? "block" : "none";
+    document.getElementById("gridToggle").classList.toggle("active", mode === "grid");
+    document.getElementById("listToggle").classList.toggle("active", mode === "list");
+}
+
+function renderPaginationUI() {
+    const container = document.getElementById("paginationContainer");
+    if(!container) return;
+    const total = vaultState.filtered.length;
+    if (total === 0) { container.innerHTML = ""; return; }
+
+    const totalPages = Math.ceil(total / vaultState.limit);
+    const start = ((vaultState.currentPage - 1) * vaultState.limit) + 1;
+    const end = Math.min(vaultState.currentPage * vaultState.limit, total);
+
+    let buttons = '';
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= vaultState.currentPage - 1 && i <= vaultState.currentPage + 1)) {
+            buttons += `<button class="page-btn ${i === vaultState.currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        } else if (i === vaultState.currentPage - 2 || i === vaultState.currentPage + 2) {
+            buttons += `<span style="color:var(--text-dim); padding:0 5px;">...</span>`;
+        }
+    }
+
+    container.className = "pagination-container";
+    container.innerHTML = `
+        <div class="pagination-info">Showing <strong>${start}</strong> to <strong>${end}</strong> of <strong>${total}</strong> files</div>
+        <div class="pagination-controls">
+            <button class="page-btn" onclick="goToPage(${vaultState.currentPage - 1})" ${vaultState.currentPage === 1 ? 'disabled' : ''}>Prev</button>
+            ${buttons}
+            <button class="page-btn" onclick="goToPage(${vaultState.currentPage + 1})" ${vaultState.currentPage === totalPages ? 'disabled' : ''}>Next</button>
+        </div>
+    `;
+}
+
+function goToPage(p) {
+    const totalPages = Math.ceil(vaultState.filtered.length / vaultState.limit);
+    if (p < 1 || p > totalPages) return;
+    vaultState.currentPage = p; displayResults(); window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateBreadcrumbs() {
+    const bc = document.getElementById("breadcrumb");
+    const navActions = document.getElementById("navActions");
+    if (!bc) return;
+    if (currentPath.length === 0) {
+        bc.innerHTML = "<span>My Private Cabinet</span>";
+        if (navActions) navActions.style.display = "none";
+    } else {
+        if (navActions) navActions.style.display = "block";
+        bc.innerHTML = ''; 
+        currentPath.forEach((p, i) => {
+            if (i > 0) bc.innerHTML += ` <span style="margin:0 8px; opacity:0.3;">/</span> `;
+            const isCurrentFolder = i === currentPath.length - 1;
+            const style = isCurrentFolder ? 'color:var(--primary); font-weight:800;' : 'color:var(--text-dim);';
+            bc.innerHTML += `<span onclick="jumpToPath(${i})" style="cursor:pointer; transition:0.2s; ${style}">${p.name}</span>`;
+        });
+    }
+}
+
+function handleItemClick(item, type, name) {
+    if (type === "folder") {
+        let nextParentId = item.id;
+        currentPath.push({ id: item.id, name: name });
+        currentParentId = nextParentId;
+        vaultState.currentPage = 1; renderVaultFiles();
+    } else { previewFile(item); }
+}
+
+function goBack() {
+    if (currentPath.length > 0) {
+        currentPath.pop();
+        if (currentPath.length === 0) { currentParentId = null; } 
+        else { const last = currentPath[currentPath.length - 1]; currentParentId = last.id; }
+        vaultState.currentPage = 1; renderVaultFiles();
+    }
+}
+
+function jumpToPath(index) {
+    if (index === -1) { currentPath = []; currentParentId = null; } 
+    else { currentPath = currentPath.slice(0, index + 1); const last = currentPath[index]; currentParentId = last.id; }
+    vaultState.currentPage = 1; renderVaultFiles();
+}
+
+function toggleSelect(e, itemId) {
+    e.stopPropagation(); const id = Number(itemId);
+    if (selectedItems.has(id)) selectedItems.delete(id); else selectedItems.add(id);
+    updateSelectionUI();
+}
+
+function toggleSelectAll() {
+    const visibleItems = vaultState.filtered; 
+    if (selectedItems.size === visibleItems.length && visibleItems.length > 0) selectedItems.clear(); 
+    else visibleItems.forEach(item => selectedItems.add(item.id)); 
+    updateSelectionUI(); displayResults(); 
+}
+
+function updateSelectionUI() {
+    const bar = document.getElementById("bulkActionsBar");
+    const countSpan = document.getElementById("selectedCount");
+    document.querySelectorAll('.item-card').forEach(card => {
+        const id = Number(card.getAttribute('data-id'));
+        card.classList.toggle('selected', selectedItems.has(id));
+    });
+    if (selectedItems.size > 0) { countSpan.innerText = selectedItems.size; bar.classList.add("active"); } 
+    else bar.classList.remove("active");
+}
+
+function clearSelection() { selectedItems.clear(); updateSelectionUI(); displayResults(); }
+
+function showContextMenu(e, item) {
+    e.preventDefault(); e.stopPropagation();
+    const menu = document.getElementById("screenContextMenu");
+    const hasClipboard = !!sessionStorage.getItem("private_clipboard");
+
+    menu.innerHTML = `
+        <div class="menu-item" onclick="previewFile(${JSON.stringify(item).replace(/"/g, '&quot;')})">Open Inspector</div>
+        <div class="menu-item" onclick="renameItem(${item.id}, '${item.type}', '${item.name}')">Rename</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" onclick="copyAction(${item.id}, '${item.type}', 'copy')">Copy Item</div>
+        <div class="menu-item" onclick="copyAction(${item.id}, '${item.type}', 'cut')">Cut Item</div>
+        ${item.type === 'folder' && hasClipboard ? `<div class="menu-item" style="color:var(--success);" onclick="performPaste(${item.id})">Paste into Folder</div>` : ''}
+        <div class="menu-divider"></div>
+        <div class="menu-item" onclick="archiveItem(${item.id}, '${item.type}')">Move to Archive</div>
+        <div class="menu-item delete" onclick="deleteItem(${item.id}, '${item.type}')">Move to Trash</div>
+    `;
+    displayMenu(menu, e.clientX, e.clientY);
+}
+
+function showGlobalContextMenu(x, y) {
+    const menu = document.getElementById("screenContextMenu");
+    const hasClipboard = !!sessionStorage.getItem("private_clipboard");
+
+    menu.innerHTML = `
+        <div class="menu-item" onclick="renderVaultFiles()">Refresh Cabinet</div>
+        <div class="menu-divider"></div>
+        <div class="menu-item" onclick="openCreateModal('folder')">New Folder</div>
+        <div class="menu-item" onclick="openCreateModal('file')">Upload Document</div>
+        ${hasClipboard ? `<div class="menu-divider"></div><div class="menu-item" style="color:var(--success);" onclick="performPaste()">Paste Items Here</div>` : ''}
+    `;
+    displayMenu(menu, x, y);
+}
+
+function displayMenu(menu, x, y) {
+    menu.style.display = "block";
+    const { innerWidth: windowWidth, innerHeight: windowHeight } = window;
+    const { offsetWidth: menuWidth, offsetHeight: menuHeight } = menu;
+    if (x + menuWidth > windowWidth) x -= menuWidth;
+    if (y + menuHeight > windowHeight) y -= menuHeight;
+    menu.style.left = `${x}px`; menu.style.top = `${y}px`;
+}
+
+// ------------------------------------------------
+// UTILITIES, MODALS & UPLOADS
+// ------------------------------------------------
+function formatSize(bytes) {
+    if (!bytes) return "0 KB";
+    const kb = bytes / 1024;
+    return kb >= 1024 ? (kb / 1024).toFixed(2) + " MB" : kb.toFixed(2) + " KB";
+}
+
+function showToast(message, type = "success") {
+    const container = document.getElementById("toastContainer");
+    if (!container) return;
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> <div>${message}</div>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 500); }, 3000);
+}
+
+function openCreateModal(type) {
+    currentModalType = type;
+    document.getElementById("itemName").style.display = (type === "folder") ? "block" : "none";
+    document.getElementById("uploadArea").style.display = (type === "file") ? "block" : "none";
+    document.getElementById("modalTitle").innerText = (type === "folder") ? "Create New Folder" : "Upload Documents";
+    document.getElementById("modalOverlay").style.display = "flex";
+}
+function closeModal() { document.getElementById("modalOverlay").style.display = "none"; }
+
+function updateFileLabel(input) {
+    const label = document.getElementById("fileCount");
+    const uploadText = document.getElementById("uploadText");
+    if (input.files.length > 0) {
+        label.innerText = `${input.files.length} file(s) selected`; label.style.display = "block";
+        uploadText.innerText = "Ready to Upload"; uploadText.style.color = "var(--success)";
+    } else {
+        label.style.display = "none"; uploadText.innerText = "Click to select files"; uploadText.style.color = "var(--text-main)";
+    }
+}
+
+async function saveItem() {
+    const nameInput = document.getElementById("itemName");
+    const fileInput = document.getElementById("itemFile");
+    const confirmBtn = document.getElementById("confirmBtn");
+    
+    const formData = new FormData();
+    if (currentModalType === "folder") {
+        if (!nameInput.value.trim()) return showToast("Name required.", "error");
+        formData.append("action", "create_folder"); formData.append("name", nameInput.value.trim());
+    } else {
+        if (!fileInput.files.length) return showToast("Select files.", "error");
+        formData.append("action", "upload_file");
+        for (let i = 0; i < fileInput.files.length; i++) formData.append("files[]", fileInput.files[i]);
+    }
+    formData.append("parent_id", currentParentId || "");
+
+    confirmBtn.innerHTML = `Processing...`; confirmBtn.disabled = true;
+
+    try {
+        const res = await fetch("../User_Backend/manage_private_vault.php", { method: "POST", body: formData });
+        const result = await res.json();
+        if (result.status === "success") { showToast("Success!"); closeModal(); renderVaultFiles(); } 
+        else showToast(result.message, "error");
+    } catch (err) { showToast("Upload failed.", "error"); } 
+    finally { confirmBtn.innerHTML = "Confirm"; confirmBtn.disabled = false; }
+}
+
+function previewFile(item) {
+    const overlay = document.getElementById("previewOverlay");
+    if (!overlay) return;
+    const path = `../uploads/private_vault/${item.storage_name}`;
+    const ext = item.storage_name.split(".").pop().toLowerCase();
+    
+    document.getElementById("prevName").innerText = item.name;
+    document.getElementById("prevSize").innerText = formatSize(item.size);
+    document.getElementById("prevDate").innerText = item.date || "-";
+    document.getElementById("prevPath").innerText = currentPath.length > 0 ? currentPath.map(p => p.name).join(' / ') : 'Private Root';
+    
+    const content = document.getElementById("previewContent");
+    content.innerHTML = "";
+    if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) content.innerHTML = `<img src="${path}" alt="Preview">`;
+    else if (ext === "pdf") content.innerHTML = `<iframe src="${path}#toolbar=0" style="width:100%; height:100%; border:none;"></iframe>`;
+    else content.innerHTML = `<div style="text-align:center; color: #64748b;"><p>No visual preview available.</p></div>`;
+    
+    document.getElementById("prevDownloadBtn").onclick = () => downloadFile(item.storage_name, item.name);
+    overlay.style.display = "flex";
+}
+function closePreview() { const o = document.getElementById("previewOverlay"); if(o) o.style.display = "none"; }
+function downloadFile(storageName, displayName) {
+    const link = document.createElement("a"); link.href = `../uploads/private_vault/${storageName}`;
+    link.download = displayName; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+
+// ------------------------------------------------
+// BATCH AND ACTIONS LOGIC
+// ------------------------------------------------
+function getSelectedItemsData() {
+    const items = [];
+    selectedItems.forEach(id => {
+        const item = vaultState.items.find(i => Number(i.id) === Number(id));
+        if (item) items.push({ id: item.id, type: item.type });
+    });
+    return items;
+}
+
+function batchCopy(mode) {
+    const items = getSelectedItemsData();
+    if (items.length === 0) return showToast("No items selected.", "error");
+    sessionStorage.setItem("private_clipboard", JSON.stringify({ mode: mode, items: items }));
+    showToast(`${items.length} item(s) ${mode === 'copy' ? 'copied' : 'cut'} to clipboard.`);
+    clearSelection();
+    renderVaultFiles();
+}
+
+function batchArchive() {
+    const items = getSelectedItemsData();
+    if (items.length === 0) return;
+    if (confirm(`Archive ${items.length} item(s)?`)) {
+        executeVaultAction("archive", items);
+    }
+}
+
+function batchDelete() {
+    const items = getSelectedItemsData();
+    if (items.length === 0) return;
+    if (confirm(`Move ${items.length} item(s) to Trash?`)) {
+        executeVaultAction("delete", items);
+    }
+}
+
+async function executeVaultAction(actionType, itemsArray) {
+    const fd = new FormData();
+    fd.append("action", actionType);
+    fd.append("items", JSON.stringify(itemsArray));
+    fd.append("target_folder_id", currentParentId || "");
+
+    try {
+        const res = await fetch("../User_Backend/manage_private_vault.php", { method: "POST", body: fd });
+        const data = await res.json();
+        
+        if (data.status === "success" || data.success) {
+            showToast("Operation successful.");
+            clearSelection();
+            renderVaultFiles();
+        } else {
+            showToast(data.message || "Operation failed.", "error");
+        }
+    } catch (err) {
+        showToast("Server error.", "error");
+    }
+}
+
+async function renameItem(id, type, oldName) {
+    const newName = prompt("Rename " + type + ":", oldName);
+    if (!newName || newName === oldName) return;
+
+    const fd = new FormData();
+    fd.append("action", "rename");
+    fd.append("id", id);
+    fd.append("type", type);
+    fd.append("new_name", newName);
+
+    try {
+        await fetch("../User_Backend/manage_private_vault.php", { method: "POST", body: fd });
+        renderVaultFiles();
+    } catch (err) {
+        showToast("Rename failed.", "error");
+    }
+}
+
+function copyAction(id, type, mode) {
+    sessionStorage.setItem("private_clipboard", JSON.stringify({ mode: mode, items: [{id: id, type: type}] }));
+    showToast(`Item ${mode === 'copy' ? 'copied' : 'cut'} to clipboard.`);
+    renderVaultFiles();
+}
+
+function archiveItem(id, type) {
+    if (confirm("Move this to Archive?")) {
+        executeVaultAction("archive", [{id: id, type: type}]);
+    }
+}
+
+function deleteItem(id, type) {
+    if (confirm("Move this to Trash?")) {
+        executeVaultAction("delete", [{id: id, type: type}]);
+    }
+}
+
+async function performPaste(targetFolderId = null) {
+    const clipString = sessionStorage.getItem("private_clipboard");
+    if (!clipString) return showToast("Clipboard is empty.", "error");
+
+    const clip = JSON.parse(clipString);
+    if (!clip || !clip.items || clip.items.length === 0) return showToast("Clipboard is empty.", "error");
+
+    const actionType = "paste_" + clip.mode; 
+    const fd = new FormData();
+    fd.append("action", actionType);
+    fd.append("items", JSON.stringify(clip.items));
+    fd.append("target_folder_id", targetFolderId !== null ? targetFolderId : (currentParentId || ""));
+
+    try {
+        const res = await fetch("../User_Backend/manage_private_vault.php", { method: "POST", body: fd });
+        const data = await res.json();
+
+        if (data.status === "success" || data.success) {
+            showToast("Paste successful.");
+            if (clip.mode === "cut") sessionStorage.removeItem("private_clipboard");
+            renderVaultFiles();
+        } else {
+            showToast(data.message || "Paste failed.", "error");
+        }
+    } catch (err) {
+        showToast("Server error.", "error");
+    }
+}
+
+function handleLogout() { 
+    if(confirm("Sign out of EuFile Workspace?")) window.location.href = "../Backend/logout.php"; 
+}
+</script>
+</body>
+</html>

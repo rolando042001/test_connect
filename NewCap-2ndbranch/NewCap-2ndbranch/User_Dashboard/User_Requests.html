@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Requests | EuFile</title>
+    <style>
+        :root { --primary: #03acfa; --sidebar-bg: #0f172a; --sidebar-hover: rgba(255,255,255,0.05); --bg-main: #f8fafc; --text-main: #1e293b; --border: #e2e8f0; --text-dim: #64748b; --white: #ffffff; --danger: #ef4444; --success: #10b981; --warning: #f59e0b; }
+        body { margin: 0; font-family: "Segoe UI", sans-serif; display: flex; height: 100vh; background: var(--bg-main); overflow: hidden; }
+        aside { width: 260px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; flex-shrink: 0; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .brand { padding: 25px 20px; font-weight: 800; font-size: 1.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); color: #60a5fa; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .nav-scroll { flex: 1; overflow-y: auto; padding: 15px 10px; }
+        .menu-category { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; margin: 15px 10px 5px; font-weight: 800; letter-spacing: 0.5px; }
+        .nav-item { padding: 12px 15px; border-radius: 8px; color: white; display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; transition: 0.2s; font-weight: 600; }
+        .nav-item:hover, .nav-item.active { background: var(--sidebar-hover); color: white; }
+        .nav-item.active { background: var(--primary) !important; box-shadow: 0 4px 12px rgba(3, 172, 250, 0.2); }
+        .nav-item span svg { stroke: white; }
+        .logout-section { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn-logout { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--text-dim); color: var(--text-light); border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.2s; }
+        .btn-logout:hover { background: rgba(255,255,255,0.05); color: white; border-color: white; }
+
+        main { flex: 1; padding: 40px; overflow-y: auto; max-width: 1400px; margin: 0 auto; position: relative; }
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .page-title h1 { margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-main); }
+        .page-title p { margin: 5px 0 0; color: var(--text-dim); font-size: 0.9rem; font-weight: 600; }
+
+        .card { background: white; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8fafc; padding: 15px 20px; text-align: left; font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; border-bottom: 2px solid var(--border); font-weight: 800; }
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-main); font-weight: 500; }
+        tbody tr:hover { background: #f8fafc; }
+
+        .status-badge { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-approved { background: #dcfce7; color: #16a34a; }
+        .status-denied { background: #fee2e2; color: #dc2626; }
+
+        .btn-primary { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(3, 172, 250, 0.2); }
+        .btn-primary:hover { transform: translateY(-2px); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal { background: white; padding: 35px; border-radius: 16px; width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 800; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; outline: none; transition: 0.2s; box-sizing: border-box; background: #f8fafc; font-family: inherit; }
+        .form-control:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(3, 172, 250, 0.1); }
+    </style>
+</head>
+<body>
+
+<aside>
+    <div class="brand" onclick="window.location.href='User_Dashboard.html'">☁️ EuFile Workspace</div>
+    <div class="nav-scroll">
+        <div class="menu-category">Main</div>
+        <a href="User_Dashboard.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span> My Dashboard</a>
+        <div class="menu-category">Storage</div>
+        <a href="User_PrivateVault.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span> Private Cabinet</a>
+        <a href="User_DeptVault.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span> Department Vault</a>
+        <div class="menu-category">Requests</div>
+        <a href="User_Requests.html" class="nav-item active"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span> My Requests</a>
+        <div class="menu-category">Records</div>
+        <a href="User_Archive.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect></svg></span> My Archive</a>
+        <a href="User_Trash.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg></span> My Trash</a>
+        <div class="menu-category">Account</div>
+        <a href="User_Profile.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path></svg></span> My Profile</a>
+    </div>
+    <div class="logout-section"><button class="btn-logout" onclick="window.location.href='../Backend/logout.php'">Sign Out</button></div>
+</aside>
+
+<main>
+    <div class="header-flex">
+        <div class="page-title">
+            <h1>My Access Requests</h1>
+            <p>Track your requests for restricted department files.</p>
+        </div>
+        <button class="btn-primary" onclick="document.getElementById('requestModal').style.display='flex'">Submit New Request</button>
+    </div>
+
+    <table>
+            <thead>
+                <tr>
+                    <th>Target File / Folder</th>
+                    <th>Department</th>
+                    <th>Date Requested</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th style="text-align: center;">Action</th> </tr>
+            </thead>
+            <tbody id="userRequestsBody">
+                <tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-dim);">Loading requests...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<div id="requestModal" class="modal-overlay">
+    <div class="modal">
+        <h2 style="margin: 0 0 5px; color: var(--text-main); font-weight: 800;">Request Access</h2>
+        <p style="font-size: 0.85rem; color: var(--text-dim); margin-bottom: 25px;">Provide details for the file you need.</p>
+        
+        <form id="requestForm">
+            <div class="form-group">
+                <label>Target Department</label>
+                <select class="form-control" name="dept_id" id="deptSelect" required>
+                    <option value="" disabled selected>Loading departments...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Target File or Folder Name</label>
+                <input type="text" class="form-control" name="file_name" placeholder="e.g. Q1_Audit_Report.pdf" required>
+            </div>
+            <div class="form-group">
+                <label>Reason for Request</label>
+                <textarea class="form-control" name="reason" rows="4" placeholder="Explain why you need access to this document..." required style="resize:none;"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 30px;">
+                <button type="button" style="flex: 1; padding: 12px; background: transparent; border: 1px solid var(--border); border-radius: 8px; font-weight: 700; color: var(--text-dim); cursor: pointer;" onclick="document.getElementById('requestModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn-primary" style="flex: 1;">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    fetchRequestsData();
+});
+
+async function fetchRequestsData() {
+    const tbody = document.getElementById("userRequestsBody");
+    const deptSelect = document.getElementById("deptSelect");
+    
+    try {
+        const res = await fetch('../User_Backend/manage_request.php');
+        const result = await res.json();
+
+        if (result.status === "success") {
+            const requests = result.data.requests;
+            const departments = result.data.departments;
+
+            // Load Table
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:var(--text-dim);">No requests found.</td></tr>';
+            } else {
+                tbody.innerHTML = requests.map(req => {
+                    let badgeClass = 'status-pending';
+                    let actionBtn = '<span style="color:var(--text-dim); font-size:0.8rem;">Waiting...</span>';
+
+                    if (req.status === 'Approved') {
+                        badgeClass = 'status-approved';
+                        // Pinapasa na natin ang req.storage_name
+                        actionBtn = `<button class="btn-primary" style="padding: 6px 12px; font-size: 0.75rem; border-radius: 6px;" onclick="accessFile('${req.storage_name}', '${req.target_file_name}')">Access File</button>`;
+                    } else if (req.status === 'Denied') {
+                        badgeClass = 'status-denied';
+                        actionBtn = '<span style="color:var(--danger); font-size:0.8rem; font-weight:bold;">Closed</span>';
+                    }   
+
+                    return `
+                        <tr>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg> 
+                                    <span style="font-weight:700;">${req.target_file_name}</span>
+                                </div>
+                            </td>
+                            <td style="font-weight:600; color:var(--text-dim);">${req.dept_name}</td>
+                            <td style="font-family: monospace; color:var(--text-dim); font-weight:600;">${new Date(req.request_date).toLocaleDateString()}</td>
+                            <td style="color:var(--text-dim); max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${req.reason}">${req.reason}</td>
+                            <td><span class="status-badge ${badgeClass}">${req.status}</span></td>
+                            <td style="text-align: center;">${actionBtn}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // Load Dropdown
+            deptSelect.innerHTML = '<option value="" disabled selected>Select Department</option>' + 
+                departments.map(dept => `<option value="${dept.id}">${dept.name}</option>`).join('');
+
+        } else {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">${result.message}</td></tr>`;
+        }
+    } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Failed to connect to server.</td></tr>';
+    }
+}
+
+function accessFile(storageName, fileName) {
+    // Kung walang storageName (null) ibig sabihin baka folder ang ni-request o may error
+    if (!storageName || storageName === 'null') {
+        alert("File path is not available or the file was deleted.");
+        return;
+    }
+
+    // Bubuksan nito ang totoong file mula sa vault directory sa bagong tab
+    window.open(`../uploads/vault/${storageName}`, '_blank');
+}
+
+document.getElementById('requestForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerText;
+    const formData = new FormData(this);
+
+    submitBtn.innerText = "Submitting...";
+    submitBtn.disabled = true;
+
+    try {
+        const res = await fetch('../User_Backend/manage_request.php', { method: 'POST', body: formData });
+        const data = await res.json();
+
+        if (data.status === "success") {
+            alert(data.message); 
+            document.getElementById('requestModal').style.display = 'none';
+            this.reset();
+            fetchRequestsData(); // Refresh list immediately
+        } else {
+            alert(data.message);
+        }
+    } catch (err) {
+        alert("Failed to submit request.");
+    } finally {
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+    }
+});
+</script>
+
+</body>
+</html>

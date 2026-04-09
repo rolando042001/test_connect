@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Archive | EuFile Workspace</title>
+    <style>
+        :root {
+            --primary: #03acfa;
+            --sidebar-bg: #0f172a;
+            --sidebar-hover: rgba(255,255,255,0.05);
+            --bg-main: #f1f5f9;
+            --text-main: #1e293b;
+            --border: #e2e8f0;
+            --text-dim: #64748b;
+            --white: #ffffff;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        body { margin: 0; font-family: "Segoe UI", sans-serif; display: flex; height: 100vh; background: var(--bg-main); overflow: hidden; }
+
+        /* ===== USER SIDEBAR ===== */
+        aside { width: 260px; background: var(--sidebar-bg); color: white; display: flex; flex-direction: column; flex-shrink: 0; z-index: 100; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+        .brand { padding: 25px 20px; font-weight: 800; font-size: 1.4rem; border-bottom: 1px solid rgba(255,255,255,0.1); color: #60a5fa; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .nav-scroll { flex: 1; overflow-y: auto; padding: 15px 10px; }
+        .menu-category { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; margin: 15px 10px 5px; font-weight: 800; letter-spacing: 0.5px; }
+        .nav-item { padding: 12px 15px; border-radius: 8px; color: white; display: flex; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; transition: 0.2s; font-weight: 600; }
+        .nav-item:hover, .nav-item.active { background: var(--sidebar-hover); color: white; }
+        .nav-item.active { background: var(--primary) !important; box-shadow: 0 4px 12px rgba(3, 172, 250, 0.2); }
+        .nav-item span svg { stroke: white; }
+        .logout-section { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn-logout { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; text-align: center; }
+        .btn-logout:hover { background: var(--danger); color: white; }
+
+        /* ===== MAIN CONTENT & FILTER BAR ===== */
+        main { flex: 1; padding: 40px; overflow-y: auto; max-width: 1400px; margin: 0 auto; position: relative; }
+        .header-flex { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; }
+        .page-title h1 { margin: 0; font-size: 1.8rem; font-weight: 800; color: var(--text-main); }
+        .page-title p { margin: 5px 0 0; color: var(--text-dim); font-size: 0.9rem; font-weight: 600; }
+
+        .filter-bar { background: white; padding: 15px 25px; border-radius: 16px; display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; border: 1px solid var(--border); align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .filter-bar input, .filter-bar select { padding: 10px 15px; border-radius: 10px; border: 1px solid var(--border); outline: none; background: #f8fafc; font-size: 0.85rem; font-weight: 500; transition: 0.2s; }
+        .filter-bar input:focus, .filter-bar select:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(3, 172, 250, 0.1); }
+        
+        .filter-bar-right { margin-left: auto; display: flex; gap: 5px; background: #f1f5f9; padding: 4px; border-radius: 10px; }
+        .view-btn { padding: 6px 12px; border-radius: 7px; border: none; background: transparent; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--text-dim); display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .view-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        /* ===== GRID VIEW ===== */
+        .grid-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .file-card { background: white; padding: 35px 20px 20px; border-radius: 16px; border: 1px solid var(--border); text-align: center; position: relative; transition: 0.2s; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+        .file-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); }
+        .file-card.selected { border-color: var(--primary); background: rgba(3, 172, 250, 0.05); }
+
+        .selection-dot { position: absolute; top: 15px; left: 15px; width: 20px; height: 20px; background: white; border: 2px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.2s; z-index: 10; }
+        .file-card:hover .selection-dot, .file-card.selected .selection-dot { opacity: 1; }
+        .file-card.selected .selection-dot { background: var(--primary); border-color: var(--primary); }
+
+        .ellipsis-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; color: var(--text-dim); background: transparent; border: none; z-index: 20; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; transition: 0.2s; }
+        .ellipsis-btn:hover { background: #f1f5f9; color: var(--primary); }
+
+        /* Professional Icons */
+        .item-icon-wrapper { margin-bottom: 12px; display: flex; align-items: center; justify-content: center; }
+        .item-icon { transition: transform 0.2s ease, stroke 0.2s ease, fill 0.2s ease; }
+        .file-card:hover .item-icon.folder-icon { transform: scale(1.08); fill: rgba(3, 172, 250, 0.15); }
+        .file-card:hover .item-icon.file-icon { transform: scale(1.08); stroke: var(--text-main); }
+
+        .file-name { font-weight: 700; color: var(--text-main); display: block; padding: 0 10px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
+        .file-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 5px; font-weight: 600; }
+
+        /* ===== LIST VIEW ===== */
+        .list-view { display: none; background: white; border-radius: 12px; border: 1px solid var(--border); overflow: visible; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8fafc; text-align: left; padding: 15px 20px; font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        td { padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 0.9rem; position: relative; }
+        tr.selected td { background: rgba(3, 172, 250, 0.05); }
+        .list-checkbox { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+
+        /* ===== BULK ACTIONS BAR ===== */
+        #bulkActionsBar { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%) translateY(150%); background: #0f172a; padding: 14px 28px; border-radius: 14px; display: none; align-items: center; gap: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); z-index: 10000; border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        #bulkActionsBar.active { display: flex; transform: translateX(-50%) translateY(0); }
+        .bulk-info { color: white; font-weight: 700; padding-right: 15px; border-right: 1px solid rgba(255, 255, 255, 0.2); }
+        .btn-bulk { background: transparent; color: white; border: 1px solid rgba(255, 255, 255, 0.2); padding: 8px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-bulk:hover { background: rgba(255, 255, 255, 0.1); }
+
+        /* ===== PROFESSIONAL PAGINATION ===== */
+        .pagination-container { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 0.85rem; }
+        .pagination-info { color: var(--text-dim); font-weight: 600; }
+        .pagination-controls { display: flex; gap: 5px; align-items: center; }
+        .page-btn { padding: 6px 12px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; color: var(--text-main); font-weight: 600; transition: 0.2s; }
+        .page-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; background: #f8fafc; }
+        .limit-select { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); outline: none; background: white; color: var(--text-main); font-weight: 600; cursor: pointer; }
+
+        /* ===== CONTEXT MENU ===== */
+        .context-menu { position: fixed; background: rgba(255, 255, 255, 0.98); border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); min-width: 180px; z-index: 10000; display: none; padding: 6px; backdrop-filter: blur(10px); }
+        .menu-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 0.85rem; font-weight: 600; color: #475569; cursor: pointer; border-radius: 8px; transition: 0.2s; }
+        .menu-item:hover { background: #f1f5f9; color: var(--primary); }
+        .menu-item svg { width: 16px; height: 16px; stroke-width: 2; }
+        .menu-item.delete { color: var(--danger); }
+        .menu-item.delete:hover { background: #fef2f2; color: #dc2626; }
+        .menu-divider { height: 1px; background: #f1f5f9; margin: 6px 0; }
+
+        /* ===== TOAST & SKELETON ===== */
+        .toast { background: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 10px; display: flex; align-items: center; gap: 12px; border-left: 5px solid var(--primary); animation: slideIn 0.3s ease-out forwards; min-width: 300px; z-index: 10000; font-weight: 600; font-size: 0.9rem; }
+        .toast.success { border-left-color: #10b981; }
+        .toast.error { border-left-color: var(--danger); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .skeleton-card { background: #ffffff; border-radius: 16px; padding: 30px 20px 20px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; }
+        .skeleton-icon { width: 46px; height: 46px; background: #e2e8f0; border-radius: 12px; animation: pulse 1.5s infinite; }
+        .skeleton-text { height: 12px; background: #e2e8f0; margin-top: 15px; width: 70%; border-radius: 4px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<aside>
+    <div class="brand" onclick="window.location.href='User_Dashboard.html'">☁️ EuFile Workspace</div>
+    <div class="nav-scroll">
+        <div class="menu-category">Main</div>
+        <a href="User_Dashboard.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span> My Dashboard</a>
+        
+        <div class="menu-category">Storage</div>
+        <a href="User_PrivateVault.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span> Private Cabinet</a>
+        <a href="User_DeptVault.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg></span> Department Vault</a>
+        
+        <div class="menu-category">Requests</div>
+        <a href="User_Requests.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span> My Requests</a>
+
+        <div class="menu-category">Records</div>
+        <a href="User_Archive.html" class="nav-item active"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect></svg></span> My Archive</a>
+        <a href="User_Trash.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg></span> My Trash</a>
+        
+        <div class="menu-category">Account</div>
+        <a href="User_Profile.html" class="nav-item"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path></svg></span> My Profile</a>
+    </div>
+    <div class="logout-section"><button class="btn-logout" onclick="handleLogout()">Sign Out</button></div>
+</aside>
+
+<main>
+    <div id="bulkActionsBar">
+        <div class="bulk-info"><span id="selectedCount">0</span> Selected</div>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-bulk" style="background:var(--success); border:none;" onclick="bulkAction('restore')">Restore All</button>
+            <button class="btn-bulk" style="background:var(--danger); border:none;" onclick="bulkAction('trash')">Move to Trash</button>
+            <button class="btn-bulk" onclick="clearSelection()" style="background:transparent; border: none; opacity:0.6;">Cancel</button>
+        </div>
+    </div>
+
+    <div class="header-flex">
+        <div class="page-title">
+            <h1>My Archive</h1>
+            <p>Manage and restore inactive personal and shared files</p>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="search-wrapper" style="position: relative; width: 300px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2" style="position:absolute; left:12px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="searchInput" style="width:100%; padding-left:40px; box-sizing:border-box;" placeholder="Search archive...">
+        </div>
+        <select id="deptFilter"><option value="">All Departments</option></select>
+        <select id="typeFilter"><option value="">All Types</option><option value="folder">Folder</option><option value="pdf">PDF</option><option value="image">Images</option></select>
+        <div class="filter-bar-right">
+            <button id="gridBtn" class="view-btn active" onclick="switchView('grid')"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></span> Grid</button>
+            <button id="listBtn" class="view-btn" onclick="switchView('list')"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line></svg></span> List</button>
+        </div>
+    </div>
+
+    <div id="gridView" class="grid-view"></div>
+    <div id="listView" class="list-view">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:40px; text-align:center;"><input type="checkbox" id="selectAllCheckbox" class="list-checkbox" onclick="toggleSelectAll()"></th>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Type</th>
+                    <th>Archived Date</th>
+                    <th style="width:50px; text-align:right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="listBody"></tbody>
+        </table>
+    </div>
+
+    <div id="paginationContainer"></div>
+</main>
+
+<div id="screenContextMenu" class="context-menu"></div>
+
+<div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 10001;"></div>
+
+<script>
+// ======================================
+// ARCHIVE JS - USER SYSTEM
+// ======================================
+
+let archiveState = {
+    items: [],
+    filtered: [],
+    currentPage: 1,
+    limit: 12
+};
+let departmentsMap = {};
+let selectedItems = new Set();
+let currentView = 'grid';
+
+document.addEventListener('DOMContentLoaded', () => {
+    initUI();
+    loadDepartments().then(() => fetchArchive());
+});
+
+function initUI() {
+    document.getElementById("searchInput").addEventListener("keyup", () => { archiveState.currentPage = 1; applyFilters(); });
+    document.getElementById("deptFilter").addEventListener("change", () => { archiveState.currentPage = 1; applyFilters(); });
+    document.getElementById("typeFilter").addEventListener("change", () => { archiveState.currentPage = 1; applyFilters(); });
+
+    document.addEventListener("click", () => {
+        const menu = document.getElementById("screenContextMenu");
+        if (menu) menu.style.display = "none";
+    });
+}
+
+// ------------------------------------------------
+// DATA FETCHING & FILTERING
+// ------------------------------------------------
+async function loadDepartments() {
+    try {
+        const res = await fetch('../Backend/get_Departments.php');
+        const departments = await res.json();
+        const filter = document.getElementById("deptFilter");
+        
+        departments.forEach(dept => {
+            departmentsMap[dept.id] = dept.name;
+            const opt = document.createElement("option");
+            opt.value = dept.id; opt.textContent = dept.name;
+            if (filter) filter.appendChild(opt);
+        });
+    } catch (e) { console.error("Error loading departments:", e); }
+}
+
+async function fetchArchive() {
+    showSkeletonLoaders();
+    try {
+        const res = await fetch('../Archive/get_archive.php');
+        archiveState.items = await res.json();
+        applyFilters(); 
+    } catch (e) { showToast("Error loading archive.", "error"); }
+}
+
+function applyFilters() {
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const typeFilter = document.getElementById("typeFilter").value;
+    const dept = document.getElementById("deptFilter").value;
+
+    archiveState.filtered = archiveState.items.filter(d => {
+        const matchSearch = d.name.toLowerCase().includes(search);
+        const matchDept = !dept || d.dept_id == dept;
+        
+        let matchType = true;
+        if (typeFilter) {
+            if (typeFilter === 'folder') matchType = d.type === 'folder';
+            else if (typeFilter === 'pdf') matchType = d.type === 'file' && d.name.toLowerCase().endsWith('.pdf');
+            else if (typeFilter === 'image') matchType = d.type === 'file' && /\.(jpg|jpeg|png|webp|gif)$/i.test(d.name.toLowerCase());
+        }
+        return matchSearch && matchType && matchDept;
+    });
+
+    displayResults();
+}
+
+// ------------------------------------------------
+// RENDERING UI
+// ------------------------------------------------
+function showSkeletonLoaders() {
+    const grid = document.getElementById("gridView");
+    const listBody = document.getElementById("listBody");
+    grid.innerHTML = ""; listBody.innerHTML = "";
+    
+    if (currentView === 'grid') {
+        for (let i = 0; i < archiveState.limit; i++) {
+            grid.innerHTML += `<div class="skeleton-card"><div class="skeleton-icon"></div><div class="skeleton-text"></div><div class="skeleton-text" style="width: 40%; height: 8px;"></div></div>`;
+        }
+    }
+}
+
+function getProfessionalIcon(type, name) {
+    const ext = type === "file" ? name.split(".").pop().toLowerCase() : "";
+    const strokeColor = "#64748b"; 
+    
+    if (type === "folder") {
+        return `<svg class="item-icon folder-icon" width="46" height="46" viewBox="0 0 24 24" fill="rgba(3,172,250,0.1)" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+    }
+    if (ext === "pdf") {
+        return `<svg class="item-icon file-icon" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></svg>`;
+    } else if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext)) {
+        return `<svg class="item-icon file-icon" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+    } else if (["xlsx", "xls", "csv"].includes(ext)) {
+        return `<svg class="item-icon file-icon" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 13h2"></path><path d="M8 17h2"></path><path d="M14 13h2"></path><path d="M14 17h2"></path></svg>`;
+    } else {
+        return `<svg class="item-icon file-icon" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
+    }
+}
+
+function displayResults() {
+    const grid = document.getElementById("gridView");
+    const listBody = document.getElementById("listBody");
+    grid.innerHTML = ""; listBody.innerHTML = "";
+
+    const total = archiveState.filtered.length;
+    const start = (archiveState.currentPage - 1) * archiveState.limit;
+    const paginated = archiveState.filtered.slice(start, start + archiveState.limit);
+
+    if (total === 0) {
+        const emptyMsg = `<div style="grid-column:1/-1;text-align:center;color:var(--text-dim);padding:50px;">No items found in archive.</div>`;
+        grid.innerHTML = emptyMsg;
+        listBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:50px;color:var(--text-dim);">No items found in archive.</td></tr>`;
+    } else {
+        paginated.forEach(item => {
+            const isSelected = selectedItems.has(`${item.type}-${item.id}`);
+            const iconSVG = getProfessionalIcon(item.type, item.name);
+            const deptName = departmentsMap[item.dept_id] || 'Private Storage';
+            
+            // Grid Render
+            const card = document.createElement("div");
+            card.className = `file-card ${isSelected ? 'selected' : ''}`;
+            card.innerHTML = `
+                <div class="selection-dot" onclick="toggleSelect('${item.id}', '${item.type}', event)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <button class="ellipsis-btn" onclick="event.stopPropagation(); showContextMenu(event, ${JSON.stringify(item).replace(/"/g, '&quot;')})">⋮</button>
+                <div class="item-icon-wrapper">${iconSVG}</div>
+                <span class="file-name" title="${item.name}">${item.name}</span>
+                <div class="file-meta">${deptName}</div>
+                <div class="file-meta" style="opacity:0.7;">Archived: ${item.date}</div>
+            `;
+            card.onclick = (e) => { e.ctrlKey ? toggleSelect(item.id, item.type, e) : toggleSelect(item.id, item.type, e); };
+            grid.appendChild(card);
+
+            // List Render
+            const tr = document.createElement("tr");
+            tr.className = isSelected ? 'selected' : '';
+            tr.onclick = (e) => { if (!e.target.closest('.list-checkbox') && !e.target.closest('.ellipsis-btn')) toggleSelect(item.id, item.type, e); };
+            tr.innerHTML = `
+                <td style="text-align:center;"><input type="checkbox" class="list-checkbox" ${isSelected ? 'checked' : ''} onclick="toggleSelect('${item.id}', '${item.type}', event)"></td>
+                <td><div style="display:flex; align-items:center; gap:12px;"><div style="width:24px; display:flex; align-items:center;">${iconSVG.replace(/46/g, '24')}</div><span style="font-weight:600;">${item.name}</span></div></td>
+                <td>${deptName}</td>
+                <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:700; color:var(--text-dim);">${item.type.toUpperCase()}</span></td>
+                <td>${item.date}</td>
+                <td style="text-align: right;"><button class="ellipsis-btn" style="position:static;" onclick="event.stopPropagation(); showContextMenu(event, ${JSON.stringify(item).replace(/"/g, '&quot;')})">⋮</button></td>
+            `;
+            listBody.appendChild(tr);
+        });
+    }
+
+    renderPaginationUI();
+    updateSelectionUI();
+    
+    const selectAllCb = document.getElementById('selectAllCheckbox');
+    if (selectAllCb) selectAllCb.checked = (selectedItems.size === archiveState.filtered.length && archiveState.filtered.length > 0);
+}
+
+function switchView(mode) {
+    currentView = mode;
+    document.getElementById("gridBtn").classList.toggle("active", mode === "grid");
+    document.getElementById("listBtn").classList.toggle("active", mode === "list");
+    document.getElementById("gridView").style.display = mode === "grid" ? "grid" : "none";
+    document.getElementById("listView").style.display = mode === "list" ? "block" : "none";
+    displayResults(); 
+}
+
+// ------------------------------------------------
+// PAGINATION
+// ------------------------------------------------
+function renderPaginationUI() {
+    const container = document.getElementById("paginationContainer");
+    const total = archiveState.filtered.length;
+    if (total === 0) { container.innerHTML = ""; return; }
+
+    const totalPages = Math.ceil(total / archiveState.limit);
+    const start = ((archiveState.currentPage - 1) * archiveState.limit) + 1;
+    const end = Math.min(archiveState.currentPage * archiveState.limit, total);
+
+    let buttons = '';
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= archiveState.currentPage - 1 && i <= archiveState.currentPage + 1)) {
+            buttons += `<button class="page-btn ${i === archiveState.currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        } else if (i === archiveState.currentPage - 2 || i === archiveState.currentPage + 2) {
+            buttons += `<span style="color:var(--text-dim); padding:0 5px;">...</span>`;
+        }
+    }
+
+    container.className = "pagination-container";
+    container.innerHTML = `
+        <div class="pagination-info">
+            Showing <strong>${start}</strong> to <strong>${end}</strong> of <strong>${total}</strong> files
+            <select class="limit-select" style="margin-left: 15px;" onchange="changeLimit(this.value)">
+                <option value="12" ${archiveState.limit == 12 ? 'selected' : ''}>12 / page</option>
+                <option value="24" ${archiveState.limit == 24 ? 'selected' : ''}>24 / page</option>
+                <option value="48" ${archiveState.limit == 48 ? 'selected' : ''}>48 / page</option>
+            </select>
+        </div>
+        <div class="pagination-controls">
+            <button class="page-btn" onclick="goToPage(${archiveState.currentPage - 1})" ${archiveState.currentPage === 1 ? 'disabled' : ''}>Prev</button>
+            ${buttons}
+            <button class="page-btn" onclick="goToPage(${archiveState.currentPage + 1})" ${archiveState.currentPage === totalPages ? 'disabled' : ''}>Next</button>
+        </div>
+    `;
+}
+
+function goToPage(p) {
+    const totalPages = Math.ceil(archiveState.filtered.length / archiveState.limit);
+    if (p < 1 || p > totalPages) return;
+    archiveState.currentPage = p;
+    displayResults();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function changeLimit(l) {
+    archiveState.limit = parseInt(l);
+    archiveState.currentPage = 1;
+    displayResults();
+}
+
+// ------------------------------------------------
+// SELECTION & ACTIONS
+// ------------------------------------------------
+function toggleSelect(id, type, e) {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const key = `${type}-${id}`;
+    if (selectedItems.has(key)) selectedItems.delete(key);
+    else selectedItems.add(key);
+    updateSelectionUI();
+    displayResults(); 
+}
+
+function toggleSelectAll() {
+    const visibleItems = archiveState.filtered; 
+    if (selectedItems.size === visibleItems.length && visibleItems.length > 0) {
+        selectedItems.clear(); 
+    } else {
+        visibleItems.forEach(item => selectedItems.add(`${item.type}-${item.id}`)); 
+    }
+    updateSelectionUI();
+    displayResults(); 
+}
+
+function updateSelectionUI() {
+    const bar = document.getElementById("bulkActionsBar");
+    const countSpan = document.getElementById("selectedCount");
+    
+    if (selectedItems.size > 0) {
+        countSpan.innerText = selectedItems.size;
+        bar.classList.add("active");
+    } else {
+        bar.classList.remove("active");
+    }
+}
+
+function clearSelection() {
+    selectedItems.clear();
+    updateSelectionUI();
+    displayResults();
+}
+
+function showContextMenu(e, item) {
+    e.preventDefault(); e.stopPropagation();
+    const menu = document.getElementById("screenContextMenu");
+    
+    menu.innerHTML = `
+        <div class="menu-item" style="color:var(--success);" onclick="singleAction(${item.id}, '${item.type}', 'restore')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg> Restore Item
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-item delete" onclick="singleAction(${item.id}, '${item.type}', 'trash')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg> Move to Trash
+        </div>
+    `;
+    
+    menu.style.display = "block";
+    const { innerWidth: windowWidth, innerHeight: windowHeight } = window;
+    const { offsetWidth: menuWidth, offsetHeight: menuHeight } = menu;
+    let x = e.clientX; let y = e.clientY;
+    if (x + menuWidth > windowWidth) x -= menuWidth;
+    if (y + menuHeight > windowHeight) y -= menuHeight;
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+}
+
+// ------------------------------------------------
+// BACKEND API CALLS
+// ------------------------------------------------
+function singleAction(id, type, action) {
+    selectedItems.clear();
+    selectedItems.add(`${type}-${id}`);
+    bulkAction(action);
+}
+
+async function bulkAction(action) {
+    if (selectedItems.size === 0) return;
+    
+    const items = Array.from(selectedItems).map(key => { 
+        const [type, id] = key.split('-'); 
+        return { type, id: parseInt(id) }; 
+    });
+
+    const actionText = action === 'restore' ? 'Restore' : 'Move to Trash';
+    if (!confirm(`Are you sure you want to ${actionText} ${items.length} item(s)?`)) return;
+
+    const endpoint = action === 'restore' ? '../Archive/unarchive.php' : '../User_Backend/archive_to_trash.php';
+    
+    try {
+        const res = await fetch(endpoint, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ items }) 
+        });
+        
+        const data = await res.json();
+        if (data.success || data.status === 'success') { 
+            showToast(`Items successfully ${action === 'restore' ? 'restored' : 'moved to trash'}.`);
+            selectedItems.clear(); 
+            fetchArchive(); 
+        } else {
+            showToast(data.error || "Operation failed.", "error");
+        }
+    } catch (e) { 
+        showToast("Server connection error.", "error"); 
+    }
+}
+
+// ------------------------------------------------
+// UTILITIES
+// ------------------------------------------------
+function showToast(message, type = "success") {
+    const container = document.getElementById("toastContainer");
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> <div>${message}</div>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 500); }, 3000);
+}
+
+function handleLogout() { 
+    if(confirm("Confirm Logout?")) window.location.href = "../Backend/logout.php"; 
+}
+</script>
+</body>
+</html>
