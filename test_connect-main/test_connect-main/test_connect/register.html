@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>test_connect — Cabinet Control</title>
+<style>
+:root {
+    --bg:        #f6f7fb;
+    --card:      #ffffff;
+    --ink:       #0f172a;
+    --ink-mute:  #64748b;
+    --line:      #e2e8f0;
+    --accent:    #2563eb;
+    --accent-2:  #1d4ed8;
+    --accent-bg: #eff6ff;
+    --pass:      #10b981;
+    --pass-bg:   #ecfdf5;
+    --fail:      #ef4444;
+    --fail-bg:   #fef2f2;
+    --shadow:    0 1px 3px rgba(15, 23, 42, .04), 0 8px 24px rgba(15, 23, 42, .06);
+    --radius:    14px;
+}
+* { box-sizing: border-box; }
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+}
+.wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+}
+header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+header .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-bg);
+    color: var(--accent);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+header .badge .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .2);
+}
+header h1 {
+    margin: 0 0 6px;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+header p {
+    margin: 0;
+    color: var(--ink-mute);
+    font-size: .92rem;
+}
+
+.card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+.card-head {
+    padding: 20px 22px 4px;
+}
+.card-head h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+.card-head p {
+    margin: 4px 0 0;
+    color: var(--ink-mute);
+    font-size: .85rem;
+}
+.card-body {
+    padding: 18px 22px 22px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+.field:last-child { margin-bottom: 0; }
+.field label {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+select {
+    width: 100%;
+    padding: 11px 14px;
+    font: inherit;
+    font-size: .95rem;
+    color: var(--ink);
+    background: #fafbfd url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2364748b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+select:focus {
+    outline: 0;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+}
+select:disabled {
+    background-color: #f1f5f9;
+    color: var(--ink-mute);
+    cursor: not-allowed;
+}
+
+.btn {
+    width: 100%;
+    padding: 13px 18px;
+    background: var(--accent);
+    color: white;
+    border: 0;
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 600;
+    font-size: .95rem;
+    cursor: pointer;
+    transition: background .15s ease, transform .08s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.btn:hover  { background: var(--accent-2); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+}
+.btn.ghost {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--line);
+}
+.btn.ghost:hover { background: #f8fafc; }
+
+.status {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: .85rem;
+    display: none;
+    line-height: 1.45;
+}
+.status.show     { display: block; }
+.status.success  { background: var(--pass-bg); color: #065f46; border: 1px solid #a7f3d0; }
+.status.error    { background: var(--fail-bg); color: #991b1b; border: 1px solid #fecaca; }
+.status.info     { background: var(--accent-bg); color: var(--accent-2); border: 1px solid #bfdbfe; }
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0;
+    color: var(--ink-mute);
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 600;
+}
+.divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+}
+
+footer {
+    text-align: center;
+    color: var(--ink-mute);
+    font-size: .78rem;
+    margin-top: 24px;
+    line-height: 1.6;
+}
+footer a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+footer a:hover { text-decoration: underline; }
+
+/* spinner for in-flight buttons */
+.spin {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, .35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+    <header>
+        <span class="badge"><span class="dot"></span> Cabinet Control</span>
+        <h1>test_connect</h1>
+        <p>Admin panel for the cabinet hardware. Watch the LCD on the device for live status.</p>
+    </header>
+
+    <div class="card">
+        <div class="card-head">
+            <h2>Register New User</h2>
+            <p>Arms the next cabinet poll. Walk to the device and follow the LCD prompts: tap RFID → place finger → enter PIN.</p>
+        </div>
+        <div class="card-body">
+            <button id="btnRegister" class="btn" onclick="startRegister()">
+                <span id="btnRegisterLabel">Start Registration</span>
+            </button>
+            <div id="regStatus" class="status"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <h2>Unlock Cabinet</h2>
+            <p>Admin override. Arms the relay for the selected channel. The cabinet fires within ~1 second.</p>
+        </div>
+        <div class="card-body">
+            <div class="field">
+                <label for="relay">Cabinet</label>
+                <select id="relay">
+                    <option value="1">Cabinet 1</option>
+                    <option value="2">Cabinet 2</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="uid">RFID Card</label>
+                <select id="uid">
+                    <option value="">Loading enrolled cards…</option>
+                </select>
+            </div>
+
+            <button id="btnUnlock" class="btn" onclick="unlockCabinet()">
+                <span id="btnUnlockLabel">Start Authentication</span>
+            </button>
+            <div id="unlockStatus" class="status"></div>
+        </div>
+    </div>
+
+    <footer>
+        Server status:
+        <a href="health.php">open health dashboard →</a>
+    </footer>
+</div>
+
+<script>
+// ----------------------------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------------------------
+function setStatus(elId, kind, html) {
+    const el = document.getElementById(elId);
+    el.className = "status show " + kind;
+    el.innerHTML = html;
+}
+function clearStatus(elId) {
+    const el = document.getElementById(elId);
+    el.className = "status";
+    el.innerHTML = "";
+}
+function setBusy(btnId, labelId, busy, idleText) {
+    const btn = document.getElementById(btnId);
+    const lbl = document.getElementById(labelId);
+    btn.disabled = busy;
+    lbl.innerHTML = busy
+        ? '<span class="spin"></span> Working…'
+        : idleText;
+}
+
+// ----------------------------------------------------------------------------
+// Load enrolled UIDs into the dropdown on page load
+// ----------------------------------------------------------------------------
+async function loadUIDs() {
+    const dropdown = document.getElementById("uid");
+    try {
+        const res  = await fetch("get_rfids.php");
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+            dropdown.innerHTML = '<option value="">No users enrolled yet</option>';
+            return;
+        }
+        dropdown.innerHTML = "";
+        data.forEach(user => {
+            const option = document.createElement("option");
+            option.value = user.rfid_uid;
+            option.text  = user.rfid_uid;
+            dropdown.appendChild(option);
+        });
+    } catch (err) {
+        dropdown.innerHTML = '<option value="">Failed to load — server unreachable</option>';
+    }
+}
+loadUIDs();
+
+// ----------------------------------------------------------------------------
+// Start Registration
+// ----------------------------------------------------------------------------
+async function startRegister() {
+    setBusy("btnRegister", "btnRegisterLabel", true);
+    clearStatus("regStatus");
+    try {
+        const res  = await fetch("register_start.php");
+        const data = (await res.text()).trim();
+        if (data === "REGISTER_STARTED") {
+            setStatus("regStatus", "info",
+                "<strong>Enrollment armed.</strong> Walk to the cabinet and follow the LCD: tap RFID → place finger → enter passcode.");
+        } else {
+            setStatus("regStatus", "error", "Server replied: " + data);
+        }
+    } catch (err) {
+        setStatus("regStatus", "error", "Server unreachable.");
+    } finally {
+        setBusy("btnRegister", "btnRegisterLabel", false, "Start Registration");
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Unlock Cabinet (admin override)
+// ----------------------------------------------------------------------------
+async function unlockCabinet() {
+    const relay = document.getElementById("relay").value;
+    const uid   = document.getElementById("uid").value;
+
+    if (!uid) {
+        setStatus("unlockStatus", "error", "Pick an RFID card first.");
+        return;
+    }
+
+    setBusy("btnUnlock", "btnUnlockLabel", true);
+    clearStatus("unlockStatus");
+
+    try {
+        const res = await fetch("activate_relay.php", {
+            method:  "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body:    "relay=" + encodeURIComponent(relay) + "&uid=" + encodeURIComponent(uid),
+        });
+        const data = (await res.text()).trim();
+
+        if (data === "RELAY_ENABLED") {
+            setStatus("unlockStatus", "success",
+                "<strong>Relay " + relay + " armed.</strong> Cabinet should fire within 1 second.");
+        } else if (data === "RELAY_NOT_FOUND") {
+            setStatus("unlockStatus", "error",
+                "<strong>Relay row missing.</strong> Re-import <code>test_connect.sql</code> or open the health dashboard.");
+        } else if (data === "INVALID_RELAY") {
+            setStatus("unlockStatus", "error", "Invalid relay channel.");
+        } else if (data === "MISSING_RELAY") {
+            setStatus("unlockStatus", "error", "Missing relay parameter.");
+        } else {
+            setStatus("unlockStatus", "error", "Unexpected reply: " + data);
+        }
+    } catch (err) {
+        setStatus("unlockStatus", "error", "Server unreachable.");
+    } finally {
+        setBusy("btnUnlock", "btnUnlockLabel", false, "Start Authentication");
+    }
+}
+</script>
+
+</body>
+</html>

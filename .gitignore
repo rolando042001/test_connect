@@ -1,0 +1,30 @@
+# User-uploaded content
+uploads/
+!uploads/.gitkeep
+
+# Arduino build artefacts
+CFMS_V2/build/
+CFMS_V2/*.bin
+CFMS_V2/*.elf
+CFMS_V2/*.map
+
+# OS / editor
+Thumbs.db
+.DS_Store
+.vscode/
+*.log
+
+# PHP/composer
+vendor/
+
+# Claude Code agent settings
+.claude/
+
+# Local test cookies / scratch files
+test_cookies.txt
+
+# ESP32 secrets
+CFMS_V2/secrets.h
+
+# Source archives
+*.zip

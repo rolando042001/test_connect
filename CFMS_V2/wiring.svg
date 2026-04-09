@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" font-family="Segoe UI, Arial, sans-serif">
+  <!-- ============================================================
+       CFMS_V2 wiring diagram
+       Pin assignments mirror CFMS_V2.ino exactly. If you change a
+       pin in the .ino, update this file too.
+       ============================================================ -->
+
+  <defs>
+    <style>
+      .lbl    { font-size: 12px; fill: #1e293b; }
+      .lblb   { font-size: 13px; font-weight: 700; fill: #0f172a; }
+      .pin    { font-size: 11px; fill: #334155; font-family: Consolas, monospace; }
+      .module { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; }
+      .esp32  { fill: #0f172a; stroke: #03acfa; stroke-width: 2; }
+      .esplbl { fill: #f8fafc; }
+      .legend { font-size: 12px; fill: #64748b; }
+      .title  { font-size: 22px; font-weight: 800; fill: #0f172a; }
+      .sub    { font-size: 13px; fill: #64748b; }
+      .pinpad { fill: #fef3c7; stroke: #f59e0b; }
+      .danger { fill: #fee2e2; stroke: #dc2626; }
+      .gnd    { stroke: #1e293b; stroke-width: 2; fill: none; }
+      .pwr5   { stroke: #dc2626; stroke-width: 2; fill: none; }
+      .pwr3   { stroke: #f97316; stroke-width: 2; fill: none; }
+      .pwr12  { stroke: #7c2d12; stroke-width: 2.5; fill: none; }
+      .data   { stroke-width: 2; fill: none; }
+      .yellow { stroke: #eab308; }
+      .blue   { stroke: #2563eb; }
+      .green  { stroke: #16a34a; }
+      .white  { stroke: #cbd5e1; }
+      .grey   { stroke: #64748b; }
+      .purple { stroke: #9333ea; }
+      .pink   { stroke: #ec4899; }
+      .cyan   { stroke: #06b6d4; }
+      .lime   { stroke: #84cc16; }
+      .brown  { stroke: #92400e; }
+    </style>
+    <marker id="dot" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="6" markerHeight="6">
+      <circle cx="3" cy="3" r="2.5" fill="#1e293b"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="900" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="20" y="35" class="title">CFMS_V2 — ESP32 Cabinet Wiring</text>
+  <text x="20" y="55" class="sub">3-factor (RFID + Fingerprint + Keypad) + cabinet relay + I²C LCD + WiFi/OTA</text>
+
+  <!-- ============ ESP32 in the centre ============ -->
+  <g>
+    <rect x="475" y="220" width="250" height="500" rx="12" class="esp32"/>
+    <text x="600" y="250" class="esplbl lblb" text-anchor="middle">ESP32 DevKit V1</text>
+    <text x="600" y="268" class="esplbl lbl"  text-anchor="middle" opacity="0.7">38-pin</text>
+
+    <!-- Left-side pin labels (we'll wire components on the left) -->
+    <g class="pin esplbl">
+      <text x="490" y="305">3V3</text>
+      <text x="490" y="325">GND</text>
+      <text x="490" y="345">GPIO 15  RELAY</text>
+      <text x="490" y="365">GPIO  2</text>
+      <text x="490" y="385">GPIO  4  PN532 RST</text>
+      <text x="490" y="405">GPIO  5  PN532 SS</text>
+      <text x="490" y="425">GPIO 18  PN532 SCK</text>
+      <text x="490" y="445">GPIO 19  PN532 MISO</text>
+      <text x="490" y="465">GPIO 21  LCD SDA</text>
+      <text x="490" y="485">GPIO 22  LCD SCL</text>
+      <text x="490" y="505">GPIO 23  PN532 MOSI</text>
+    </g>
+
+    <!-- Right-side pin labels -->
+    <g class="pin esplbl" text-anchor="end">
+      <text x="710" y="305">VIN  5V IN</text>
+      <text x="710" y="325">GND</text>
+      <text x="710" y="345">GPIO 13  KP COL1</text>
+      <text x="710" y="365">GPIO 12  KP COL2 ⚠</text>
+      <text x="710" y="385">GPIO 14  KP COL3</text>
+      <text x="710" y="405">GPIO 27  KP COL4</text>
+      <text x="710" y="425">GPIO 26  KP ROW1</text>
+      <text x="710" y="445">GPIO 25  KP ROW2</text>
+      <text x="710" y="465">GPIO 33  KP ROW3</text>
+      <text x="710" y="485">GPIO 32  KP ROW4</text>
+      <text x="710" y="505">GPIO 16  FP TX2 (RX)</text>
+      <text x="710" y="525">GPIO 17  FP RX2 (TX)</text>
+    </g>
+  </g>
+
+  <!-- ============ PN532 (top-left) ============ -->
+  <g>
+    <rect x="40" y="80" width="220" height="160" rx="10" class="module"/>
+    <text x="150" y="105" class="lblb" text-anchor="middle">PN532 RFID</text>
+    <text x="150" y="123" class="legend" text-anchor="middle">SPI mode (DIP: SEL0=OFF, SEL1=ON)</text>
+    <g class="pin">
+      <text x="55" y="150">SCK</text>
+      <text x="55" y="168">MOSI</text>
+      <text x="55" y="186">MISO</text>
+      <text x="55" y="204">SS</text>
+      <text x="55" y="222">RST</text>
+      <text x="180" y="150">3V3</text>
+      <text x="180" y="168">GND</text>
+    </g>
+  </g>
+
+  <!-- PN532 wires → ESP32 -->
+  <path class="data yellow" d="M 100 145 L 100 425 L 487 425" />
+  <path class="data blue"   d="M 100 163 L 110 163 L 110 505 L 487 505" />
+  <path class="data green"  d="M 100 181 L 120 181 L 120 445 L 487 445" />
+  <path class="data white"  d="M 100 199 L 130 199 L 130 405 L 487 405" />
+  <path class="data grey"   d="M 100 217 L 140 217 L 140 385 L 487 385" />
+  <path class="pwr3"        d="M 220 145 L 230 145 L 230 305 L 487 305" />
+  <path class="gnd"         d="M 220 163 L 240 163 L 240 325 L 487 325" />
+
+  <!-- ============ Fingerprint (top-right) ============ -->
+  <g>
+    <rect x="940" y="80" width="220" height="150" rx="10" class="module"/>
+    <text x="1050" y="105" class="lblb" text-anchor="middle">R307 / AS608 Fingerprint</text>
+    <text x="1050" y="123" class="legend" text-anchor="middle">UART2 — data lines are 3.3 V</text>
+    <g class="pin">
+      <text x="955" y="150">TX (out)</text>
+      <text x="955" y="168">RX (in)</text>
+      <text x="955" y="186">VCC</text>
+      <text x="955" y="204">GND</text>
+    </g>
+    <text x="1050" y="222" class="legend" text-anchor="middle" fill="#dc2626">AS608: 3.3V only · R307: 5V body</text>
+  </g>
+
+  <!-- FP wires → ESP32 -->
+  <path class="data purple" d="M 1010 145 L 850 145 L 850 505 L 713 505" />
+  <path class="data pink"   d="M 1010 163 L 860 163 L 860 525 L 713 525" />
+  <path class="pwr5"        d="M 1010 181 L 870 181 L 870 305 L 713 305" />
+  <path class="gnd"         d="M 1010 199 L 880 199 L 880 325 L 713 325" />
+
+  <!-- ============ LCD (left middle) ============ -->
+  <g>
+    <rect x="40" y="280" width="220" height="120" rx="10" class="module"/>
+    <text x="150" y="305" class="lblb" text-anchor="middle">16×2 LCD (I²C)</text>
+    <text x="150" y="323" class="legend" text-anchor="middle">addr 0x27</text>
+    <g class="pin">
+      <text x="55" y="350">SDA</text>
+      <text x="55" y="368">SCL</text>
+      <text x="180" y="350">5V</text>
+      <text x="180" y="368">GND</text>
+    </g>
+  </g>
+  <path class="data cyan" d="M 100 345 L 150 345 L 150 465 L 487 465" />
+  <path class="data lime" d="M 100 363 L 160 363 L 160 485 L 487 485" />
+  <path class="pwr5"      d="M 220 345 L 250 345 L 250 470 L 280 470 L 280 305 L 487 305" stroke-dasharray="2,2"/>
+  <path class="gnd"       d="M 220 363 L 260 363 L 260 460 L 290 460 L 290 325 L 487 325" stroke-dasharray="2,2"/>
+
+  <!-- ============ Keypad (right middle) ============ -->
+  <g>
+    <rect x="940" y="280" width="220" height="200" rx="10" class="module"/>
+    <text x="1050" y="305" class="lblb" text-anchor="middle">4×4 Matrix Keypad</text>
+    <g class="pin">
+      <text x="955" y="335">R1</text>
+      <text x="955" y="353">R2</text>
+      <text x="955" y="371">R3</text>
+      <text x="955" y="389">R4</text>
+      <text x="955" y="407">C1</text>
+      <text x="955" y="425">C2 ⚠</text>
+      <text x="955" y="443">C3</text>
+      <text x="955" y="461">C4</text>
+    </g>
+  </g>
+  <!-- 8 wires bundled to the right side of the ESP32 -->
+  <path class="data brown"  d="M 980 330 L 800 330 L 800 425 L 713 425" />
+  <path class="data brown"  d="M 980 348 L 810 348 L 810 445 L 713 445" />
+  <path class="data brown"  d="M 980 366 L 820 366 L 820 465 L 713 465" />
+  <path class="data brown"  d="M 980 384 L 830 384 L 830 485 L 713 485" />
+  <path class="data brown"  d="M 980 402 L 840 402 L 840 345 L 713 345" />
+  <path class="data brown"  d="M 980 420 L 850 420 L 850 365 L 713 365" />
+  <path class="data brown"  d="M 980 438 L 860 438 L 860 385 L 713 385" />
+  <path class="data brown"  d="M 980 456 L 870 456 L 870 405 L 713 405" />
+
+  <!-- ============ Buck converter (bottom-left) ============ -->
+  <g>
+    <rect x="40" y="540" width="220" height="120" rx="10" class="module"/>
+    <text x="150" y="565" class="lblb" text-anchor="middle">Buck Converter</text>
+    <text x="150" y="583" class="legend" text-anchor="middle">12 V → 5 V (MP1584)</text>
+    <g class="pin">
+      <text x="55" y="610">12V IN</text>
+      <text x="55" y="628">GND IN</text>
+      <text x="180" y="610">5V OUT</text>
+      <text x="180" y="628">GND</text>
+    </g>
+  </g>
+  <!-- 12 V from wall PSU into buck -->
+  <path class="pwr12" d="M 40 605 L 20 605 L 20 700 L 1180 700 L 1180 815"/>
+  <text x="600" y="690" class="legend" text-anchor="middle">+12 V from wall adapter</text>
+  <!-- 5V out of buck → ESP32 VIN and others -->
+  <path class="pwr5"  d="M 220 605 L 320 605 L 320 305 L 713 305"/>
+  <text x="305" y="600" class="legend">+5 V rail</text>
+
+  <!-- ============ Relay (bottom-right) ============ -->
+  <g>
+    <rect x="940" y="540" width="220" height="160" rx="10" class="module"/>
+    <text x="1050" y="565" class="lblb" text-anchor="middle">HL-52S Relay (1ch)</text>
+    <text x="1050" y="583" class="legend" text-anchor="middle">opto-isolated · ACTIVE LOW</text>
+    <g class="pin">
+      <text x="955" y="610">IN</text>
+      <text x="955" y="628">VCC (5V)</text>
+      <text x="955" y="646">GND</text>
+      <text x="1090" y="610" text-anchor="end">COM</text>
+      <text x="1090" y="628" text-anchor="end">NO</text>
+      <text x="1090" y="646" text-anchor="end">NC</text>
+    </g>
+  </g>
+  <!-- IN ← GPIO15 (RELAY pin on ESP32 left side) -->
+  <path class="data purple" d="M 980 605 L 760 605 L 760 345 L 487 345"/>
+  <text x="765" y="600" class="legend">GPIO 15</text>
+  <!-- Relay VCC ← +5V rail -->
+  <path class="pwr5" d="M 980 623 L 750 623 L 750 605 L 320 605" stroke-dasharray="2,2"/>
+  <!-- Relay GND -->
+  <path class="gnd"  d="M 980 641 L 740 641 L 740 720 L 487 720 L 487 325" stroke-dasharray="2,2"/>
+
+  <!-- ============ Solenoid (far right bottom) ============ -->
+  <g>
+    <rect x="940" y="740" width="220" height="120" rx="10" class="module"/>
+    <text x="1050" y="765" class="lblb" text-anchor="middle">Cabinet Solenoid</text>
+    <text x="1050" y="783" class="legend" text-anchor="middle">12 V DC</text>
+    <g class="pin">
+      <text x="955" y="810">+12V</text>
+      <text x="955" y="828">GND</text>
+    </g>
+  </g>
+  <!-- Solenoid +12V from relay COM (from +12V rail through relay NO contacts) -->
+  <path class="pwr12" d="M 1050 605 L 1050 805 L 1010 805" />
+  <text x="1060" y="725" class="legend">+12 V via NO</text>
+
+  <!-- Common ground note -->
+  <rect x="40" y="800" width="780" height="80" rx="10" fill="#fff7ed" stroke="#f97316"/>
+  <text x="55" y="825" class="lblb" fill="#9a3412">⚠ Common ground</text>
+  <text x="55" y="848" class="lbl" fill="#7c2d12">All GNDs (ESP32, PN532, FP, LCD, keypad shield, buck low side, relay, 12 V PSU,</text>
+  <text x="55" y="864" class="lbl" fill="#7c2d12">solenoid return) MUST share one rail. Missing the 12 V↔ESP32 GND bridge causes flaky relay behaviour.</text>
+
+  <!-- ============ Legend (bottom right) ============ -->
+  <g>
+    <text x="850" y="825" class="lblb">Legend</text>
+    <line x1="850" y1="838" x2="880" y2="838" class="pwr5"/>
+    <text x="888" y="842" class="legend">+5 V</text>
+    <line x1="850" y1="852" x2="880" y2="852" class="pwr3"/>
+    <text x="888" y="856" class="legend">+3.3 V</text>
+    <line x1="850" y1="866" x2="880" y2="866" class="pwr12"/>
+    <text x="888" y="870" class="legend">+12 V</text>
+    <line x1="950" y1="838" x2="980" y2="838" class="gnd"/>
+    <text x="988" y="842" class="legend">GND</text>
+    <line x1="950" y1="852" x2="980" y2="852" class="data yellow"/>
+    <text x="988" y="856" class="legend">SPI / data</text>
+    <line x1="950" y1="866" x2="980" y2="866" class="data brown"/>
+    <text x="988" y="870" class="legend">Keypad matrix</text>
+  </g>
+</svg>
